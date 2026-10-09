@@ -1,0 +1,53 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Cuda / Virtual Environments
+venv/
+env/
+.env
+.venv/
+ENV/
+
+# PyTorch / Models weights
+*.pt
+*.pth
+*.onnx
+*.engine
+models/*.pt
+!models/weights_readme.txt
+
+# Dataset & Output caches
+data/raw/*
+data/outputs/cropped_plates/*
+data/outputs/final_results/*
+!data/raw/.gitkeep
+!data/outputs/cropped_plates/.gitkeep
+!data/outputs/final_results/.gitkeep
+runs/
+wandb/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node / Frontend
+node_modules/
+.next/
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Scripts & private documents
+script/
+

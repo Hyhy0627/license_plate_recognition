@@ -1,0 +1,36 @@
+# ==========================================
+# THƯ VIỆN DỰ ÁN NHẬN DIỆN BIỂN SỐ XE (ALPR)
+# ==========================================
+
+# --- Core Computer Vision & AI Detection ---
+ultralytics>=8.0.0
+opencv-python>=4.8.0
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.23.0
+pillow>=9.5.0
+
+# --- OCR Engines ---
+paddleocr>=2.7.0
+easyocr>=1.7.0
+
+# --- Backend API & Web Framework ---
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+python-multipart>=0.0.6
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# --- Database & Storage ---
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.6
+
+# --- Utilities & Logging ---
+python-dotenv>=1.0.0
+loguru>=0.7.0
+requests>=2.31.0
+
+# --- Notebook & Development ---
+jupyter>=1.0.0
+matplotlib>=3.7.0
+pytest>=7.4.0
