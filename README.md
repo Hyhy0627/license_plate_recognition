@@ -14,7 +14,7 @@ Dự án được xây dựng bởi nhóm 5 người, áp dụng mô hình Deep 
 
 ## 📁 2. Cấu trúc thư mục dự án
 
-`	ext
+```text
 license_plate_recognition/
 ├── data/                           # Dữ liệu
 │   ├── raw/                        # Ảnh thô thu thập ban đầu
@@ -49,14 +49,14 @@ license_plate_recognition/
 ├── app.py                          # Entrypoint tương thích
 ├── main.py                         # Entrypoint chính khởi chạy FastAPI Server
 └── README.md                       # Tài liệu hướng dẫn dự án
-`
+```
 
 ---
 
 ## 🚀 3. Hướng dẫn cài đặt & Khởi chạy
 
 ### 3.1. Cài đặt môi trường Python
-`ash
+```bash
 # Tạo môi trường ảo (khuyến nghị Python 3.10 - 3.12)
 python -m venv venv
 
@@ -65,24 +65,24 @@ python -m venv venv
 
 # Cài đặt các thư viện cần thiết
 pip install -r requirements.txt
-`
+```
 
 ### 3.2. Cấu hình biến môi trường
 Tạo file .env từ file mẫu:
-`ash
+```bash
 copy .env.example .env
-`
+```
 
 ### 3.3. Đặt weights mô hình
-Sau khi huấn luyện xong mô hình YOLO, đặt file trọng số est.pt vào thư mục:
-`	ext
+Sau khi huấn luyện xong mô hình YOLO, đặt file trọng số `best.pt` vào thư mục:
+```text
 models/best.pt
-`
+```
 
 ### 3.4. Khởi chạy Backend API
-`ash
+```bash
 python main.py
-`
+```
 - Swagger API Docs: http://localhost:8000/docs
 - Redoc API Docs: http://localhost:8000/redoc
 
