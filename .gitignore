@@ -51,3 +51,5 @@ logs/
 # Scripts & private documents
 script/
 
+#test dự án
+test_system.py
