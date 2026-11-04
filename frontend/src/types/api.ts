@@ -8,6 +8,7 @@ export interface DetectionResult {
   confidence: number;
   plate_type: "one_line" | "two_line" | "unknown" | string;
   bbox: [number, number, number, number]; // [x1, y1, x2, y2]
+  engine_used?: "local_yolo" | "9router_vision" | "traditional_ocr" | string | null;
   cropped_image_url?: string | null;
   annotated_image_url?: string | null;
   is_valid_format: boolean;
@@ -26,6 +27,7 @@ export interface DetectionHistoryItem {
   plate_number: string;
   confidence: number;
   plate_type: string;
+  engine_used?: "local_yolo" | "9router_vision" | "traditional_ocr" | string | null;
   created_at: string;
   image_url?: string | null;
   cropped_plate_url?: string | null;

@@ -8,13 +8,26 @@ import os
 from src.config import settings
 from src.api.routes import router as plate_router
 from src.utils.logger import logger
+from src.db.session import engine, Base
+import src.db.models
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Khởi tạo bảng SQL nếu chưa tồn tại
+    Base.metadata.create_all(bind=engine)
+    logger.info(f"Database initialized: {settings.DATABASE_URL}")
+    
     # Khởi động hệ thống: preload weights model vào RAM/GPU một lần duy nhất
     logger.info("Initializing ALPR System...")
     logger.info(f"Model Path: {settings.YOLO_MODEL_PATH}")
     logger.info(f"OCR Engine: {settings.OCR_ENGINE}")
+    try:
+        from src.api.routes import get_detector, get_ocr_engine
+        get_detector()
+        get_ocr_engine()
+        logger.info("ALPR Models preloaded successfully into memory.")
+    except Exception as e:
+        logger.error(f"Error preloading models: {e}")
     yield
     logger.info("Shutting down ALPR System...")
 

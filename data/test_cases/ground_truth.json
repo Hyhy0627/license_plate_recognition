@@ -1,0 +1,482 @@
+{
+  "blurred/blur_01.jpg": {
+    "plate_number": "80A-005.38",
+    "clean_text": "80A00538",
+    "plate_type": "two_line",
+    "bbox": [
+      260,
+      230,
+      540,
+      430
+    ],
+    "category": "blurred"
+  },
+  "low_light/dark_01.jpg": {
+    "plate_number": "80A-005.38",
+    "clean_text": "80A00538",
+    "plate_type": "two_line",
+    "bbox": [
+      260,
+      230,
+      540,
+      430
+    ],
+    "category": "low_light"
+  },
+  "skewed/skew_01.jpg": {
+    "plate_number": "80A-005.38",
+    "clean_text": "80A00538",
+    "plate_type": "two_line",
+    "bbox": [
+      235,
+      195,
+      547,
+      458
+    ],
+    "category": "skewed"
+  },
+  "obscured/obsc_01.jpg": {
+    "plate_number": "80A-005.38",
+    "clean_text": "80A00538",
+    "plate_type": "two_line",
+    "bbox": [
+      260,
+      230,
+      540,
+      430
+    ],
+    "category": "obscured"
+  },
+  "blurred/blur_02.jpg": {
+    "plate_number": "90B-6888",
+    "clean_text": "90B6888",
+    "plate_type": "two_line",
+    "bbox": [
+      265,
+      235,
+      535,
+      425
+    ],
+    "category": "blurred"
+  },
+  "low_light/dark_02.jpg": {
+    "plate_number": "90B-6888",
+    "clean_text": "90B6888",
+    "plate_type": "two_line",
+    "bbox": [
+      265,
+      235,
+      535,
+      425
+    ],
+    "category": "low_light"
+  },
+  "skewed/skew_02.jpg": {
+    "plate_number": "90B-6888",
+    "clean_text": "90B6888",
+    "plate_type": "two_line",
+    "bbox": [
+      253,
+      216,
+      537,
+      439
+    ],
+    "category": "skewed"
+  },
+  "obscured/obsc_02.jpg": {
+    "plate_number": "90B-6888",
+    "clean_text": "90B6888",
+    "plate_type": "two_line",
+    "bbox": [
+      265,
+      235,
+      535,
+      425
+    ],
+    "category": "obscured"
+  },
+  "blurred/blur_03.jpg": {
+    "plate_number": "29-AC 886.88",
+    "clean_text": "29AC88688",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "blurred"
+  },
+  "low_light/dark_03.jpg": {
+    "plate_number": "29-AC 886.88",
+    "clean_text": "29AC88688",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "low_light"
+  },
+  "skewed/skew_03.jpg": {
+    "plate_number": "29-AC 886.88",
+    "clean_text": "29AC88688",
+    "plate_type": "two_line",
+    "bbox": [
+      272,
+      233,
+      525,
+      422
+    ],
+    "category": "skewed"
+  },
+  "obscured/obsc_03.jpg": {
+    "plate_number": "29-AC 886.88",
+    "clean_text": "29AC88688",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "obscured"
+  },
+  "blurred/blur_04.jpg": {
+    "plate_number": "51F-866.88",
+    "clean_text": "51F86688",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "blurred"
+  },
+  "low_light/dark_04.jpg": {
+    "plate_number": "51F-866.88",
+    "clean_text": "51F86688",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "low_light"
+  },
+  "skewed/skew_04.jpg": {
+    "plate_number": "51F-866.88",
+    "clean_text": "51F86688",
+    "plate_type": "one_line",
+    "bbox": [
+      199,
+      255,
+      606,
+      401
+    ],
+    "category": "skewed"
+  },
+  "obscured/obsc_04.jpg": {
+    "plate_number": "51F-866.88",
+    "clean_text": "51F86688",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "obscured"
+  },
+  "blurred/blur_05.jpg": {
+    "plate_number": "30A-123.45",
+    "clean_text": "30A12345",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "blurred"
+  },
+  "low_light/dark_05.jpg": {
+    "plate_number": "30A-123.45",
+    "clean_text": "30A12345",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "low_light"
+  },
+  "skewed/skew_05.jpg": {
+    "plate_number": "30A-123.45",
+    "clean_text": "30A12345",
+    "plate_type": "one_line",
+    "bbox": [
+      200,
+      228,
+      613,
+      426
+    ],
+    "category": "skewed"
+  },
+  "obscured/obsc_05.jpg": {
+    "plate_number": "30A-123.45",
+    "clean_text": "30A12345",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "obscured"
+  },
+  "blurred/blur_06.jpg": {
+    "plate_number": "59-G2 777.77",
+    "clean_text": "59G277777",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "blurred"
+  },
+  "low_light/dark_06.jpg": {
+    "plate_number": "59-G2 777.77",
+    "clean_text": "59G277777",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "low_light"
+  },
+  "skewed/skew_06.jpg": {
+    "plate_number": "59-G2 777.77",
+    "clean_text": "59G277777",
+    "plate_type": "two_line",
+    "bbox": [
+      245,
+      203,
+      536,
+      451
+    ],
+    "category": "skewed"
+  },
+  "obscured/obsc_06.jpg": {
+    "plate_number": "59-G2 777.77",
+    "clean_text": "59G277777",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "obscured"
+  },
+  "blurred/blur_07.jpg": {
+    "plate_number": "88-G1 333.43",
+    "clean_text": "88G133343",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "blurred"
+  },
+  "low_light/dark_07.jpg": {
+    "plate_number": "88-G1 333.43",
+    "clean_text": "88G133343",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "low_light"
+  },
+  "skewed/skew_07.jpg": {
+    "plate_number": "88-G1 333.43",
+    "clean_text": "88G133343",
+    "plate_type": "two_line",
+    "bbox": [
+      257,
+      217,
+      532,
+      438
+    ],
+    "category": "skewed"
+  },
+  "obscured/obsc_07.jpg": {
+    "plate_number": "88-G1 333.43",
+    "clean_text": "88G133343",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "obscured"
+  },
+  "blurred/blur_08.jpg": {
+    "plate_number": "27-B1 258.88",
+    "clean_text": "27B125888",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "blurred"
+  },
+  "low_light/dark_08.jpg": {
+    "plate_number": "27-B1 258.88",
+    "clean_text": "27B125888",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "low_light"
+  },
+  "skewed/skew_08.jpg": {
+    "plate_number": "27-B1 258.88",
+    "clean_text": "27B125888",
+    "plate_type": "two_line",
+    "bbox": [
+      272,
+      233,
+      525,
+      422
+    ],
+    "category": "skewed"
+  },
+  "obscured/obsc_08.jpg": {
+    "plate_number": "27-B1 258.88",
+    "clean_text": "27B125888",
+    "plate_type": "two_line",
+    "bbox": [
+      270,
+      235,
+      530,
+      425
+    ],
+    "category": "obscured"
+  },
+  "blurred/blur_09.jpg": {
+    "plate_number": "43-C 123.45",
+    "clean_text": "43C12345",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "blurred"
+  },
+  "low_light/dark_09.jpg": {
+    "plate_number": "43-C 123.45",
+    "clean_text": "43C12345",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "low_light"
+  },
+  "skewed/skew_09.jpg": {
+    "plate_number": "43-C 123.45",
+    "clean_text": "43C12345",
+    "plate_type": "one_line",
+    "bbox": [
+      199,
+      255,
+      606,
+      401
+    ],
+    "category": "skewed"
+  },
+  "obscured/obsc_09.jpg": {
+    "plate_number": "43-C 123.45",
+    "clean_text": "43C12345",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "obscured"
+  },
+  "blurred/blur_10.jpg": {
+    "plate_number": "29-E 999.99",
+    "clean_text": "29E99999",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "blurred"
+  },
+  "low_light/dark_10.jpg": {
+    "plate_number": "29-E 999.99",
+    "clean_text": "29E99999",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "low_light"
+  },
+  "skewed/skew_10.jpg": {
+    "plate_number": "29-E 999.99",
+    "clean_text": "29E99999",
+    "plate_type": "one_line",
+    "bbox": [
+      200,
+      228,
+      613,
+      426
+    ],
+    "category": "skewed"
+  },
+  "obscured/obsc_10.jpg": {
+    "plate_number": "29-E 999.99",
+    "clean_text": "29E99999",
+    "plate_type": "one_line",
+    "bbox": [
+      190,
+      275,
+      610,
+      385
+    ],
+    "category": "obscured"
+  }
+}

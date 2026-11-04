@@ -1,6 +1,13 @@
 import sys
 from loguru import logger
 
+# Đảm bảo console UTF-8 trên Windows
+try:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 logger.remove()
 logger.add(
     sys.stdout,
@@ -11,7 +18,8 @@ logger.add(
     "logs/alpr.log",
     rotation="10 MB",
     retention="7 days",
-    level="DEBUG"
+    level="DEBUG",
+    encoding="utf-8"
 )
 
 __all__ = ["logger"]

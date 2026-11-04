@@ -48,6 +48,12 @@ build/
 logs/
 *.log
 
+# Database
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+
 # Scripts & private documents
 script/
 
