@@ -1,231 +1,116 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- Uploaded images and API crops use their original local URLs. */
 
-import React, { useState } from "react";
-import { Upload, Car, CheckCircle2, Cpu, Zap, ShieldCheck } from "lucide-react";
-import type { DetectionResult, PlateDetectionResponse } from "../types/api";
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
+import { AlertCircle, ArrowDown, ArrowUpRight, Check, CheckCheck, Copy, FileImage, ImagePlus, LoaderCircle, ScanLine, ShieldCheck, Upload, X, Layers, History, Focus, ArrowRight } from "lucide-react";
+import Link from "next/link";
+import type { PlateDetectionResponse } from "../types/api";
+import { apiFetch } from "../lib/api";
+import { RequireAuth } from "../components/auth-provider";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+function imageUrl(url?: string | null) { return url ? url.startsWith("http") ? url : `${API_BASE_URL}${url}` : null; }
 
 export default function Home() {
+  return <RequireAuth><RecognitionWorkspace /></RequireAuth>;
+}
+
+function RecognitionWorkspace() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [detectionResponse, setDetectionResponse] = useState<PlateDetectionResponse | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const [annotated, setAnnotated] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const requestRef = useRef<AbortController | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const results = detectionResponse?.results ?? [];
+  const activeResult = results[activeIndex];
+  const cropUrl = imageUrl(activeResult?.cropped_image_url);
+  const annotatedUrl = imageUrl(activeResult?.annotated_image_url);
+  const confidence = activeResult ? Math.max(0, Math.min(100, activeResult.confidence * 100)) : 0;
 
-  // Mock sample detection for Phase 1 preview
-  const mockResult: PlateDetectionResponse = {
-    success: true,
-    message: "Nhận diện biển số thành công (Mock Data Contract)",
-    total_detected: 1,
-    processing_time_ms: 124.5,
-    results: [
-      {
-        plate_number: "59A1-123.45",
-        confidence: 0.9625,
-        plate_type: "two_line",
-        bbox: [120, 160, 480, 420],
-        cropped_image_url: null,
-        annotated_image_url: null,
-        is_valid_format: true,
-      },
-    ],
-  };
+  useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
+  useEffect(() => () => { requestRef.current?.abort(); if (copyTimer.current) clearTimeout(copyTimer.current); }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
+  async function processImage(file: File) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setErrorMessage("Hãy chọn ảnh JPG, PNG hoặc WEBP."); return; }
+    if (file.size > 10 * 1024 * 1024) { setErrorMessage("Ảnh quá lớn. Vui lòng chọn ảnh dưới 10 MB."); return; }
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
+    setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)); setDetectionResponse(null);
+    setActiveIndex(0); setCopied(false); setAnnotated(true); setErrorMessage(null); setIsLoading(true);
+    try {
+      const form = new FormData(); form.append("file", file);
+      const response = await apiFetch("/api/license-plates/detect", { method: "POST", body: form, signal: controller.signal });
+      if (!response.ok) { const data = await response.json().catch(() => ({})); throw new Error(typeof data.detail === "string" ? data.detail : "Chưa thể phân tích ảnh. Vui lòng thử lại."); }
+      const data: PlateDetectionResponse = await response.json();
+      if (!controller.signal.aborted) setDetectionResponse(data);
+    } catch (error) {
+      if (!controller.signal.aborted) setErrorMessage(error instanceof TypeError ? "Không thể kết nối máy chủ nhận diện. Hãy kiểm tra kết nối và thử lại." : error instanceof Error ? error.message : "Không thể phân tích ảnh.");
+    } finally { if (!controller.signal.aborted) setIsLoading(false); }
+  }
+  function onFileChange(event: ChangeEvent<HTMLInputElement>) { const file = event.target.files?.[0]; if (file) void processImage(file); event.target.value = ""; }
+  function onDrop(event: DragEvent<HTMLDivElement>) { event.preventDefault(); setIsDragging(false); const file = event.dataTransfer.files?.[0]; if (file) void processImage(file); }
+  async function copyPlate() {
+    if (!activeResult) return;
+    try { await navigator.clipboard.writeText(activeResult.plate_number); setCopied(true); if (copyTimer.current) clearTimeout(copyTimer.current); copyTimer.current = setTimeout(() => setCopied(false), 2000); }
+    catch { setErrorMessage("Không thể sao chép tự động. Bạn có thể chọn và sao chép trực tiếp biển số."); }
+  }
+  function reset() { requestRef.current?.abort(); setPreviewUrl(null); setSelectedFile(null); setDetectionResponse(null); setIsLoading(false); setErrorMessage(null); }
 
-  return (
-    <div className="space-y-8">
-      {/* Top Banner / Hero */}
-      <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-6 sm:p-10 shadow-2xl">
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-400">
-            <Zap className="h-3.5 w-3.5 text-blue-400" />
-            Phase 1: Architecture & Data Contract Ready
-          </div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Nhận Diện & Tách Biển Số Xe Việt Nam
-          </h2>
-          <p className="text-base text-slate-400 leading-relaxed">
-            Hệ thống ứng dụng Deep Learning (YOLOv8/v11) kết hợp OpenCV và Engine OCR
-            (PaddleOCR / EasyOCR), tự động xử lý biển số dài 1 dòng và biển vuông 2 dòng
-            theo tiêu chuẩn giao thông Việt Nam.
-          </p>
+  return <div className="recognition-page">
+    <section className="page-heading">
+      <div><span className="eyebrow"><span /> NHẬN DIỆN THÔNG MINH</span><h1>Mỗi biển số.<br className="mobile-break" /> Một cái nhìn rõ ràng.</h1><p>Tải ảnh phương tiện, nhận diện biển số và lưu lại kết quả trong một không gian.</p></div>
+      <Link href="/history" className="history-shortcut"><History size={16} aria-hidden="true" /> Xem lịch sử <ArrowUpRight size={15} aria-hidden="true" /></Link>
+    </section>
 
-          <div className="grid grid-cols-2 gap-4 pt-4 sm:grid-cols-4">
-            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5">
-              <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                <Cpu className="h-4 w-4 text-blue-400" /> Model YOLO
-              </div>
-              <div className="mt-1 text-lg font-bold text-white">mAP ≥ 93%</div>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5">
-              <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                <ShieldCheck className="h-4 w-4 text-emerald-400" /> OCR Accuracy
-              </div>
-              <div className="mt-1 text-lg font-bold text-white">CAR ≥ 95%</div>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5">
-              <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                <Zap className="h-4 w-4 text-amber-400" /> Latency
-              </div>
-              <div className="mt-1 text-lg font-bold text-white">≤ 1.2s / ảnh</div>
-            </div>
-            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5">
-              <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
-                <Car className="h-4 w-4 text-purple-400" /> Biển Số VN
-              </div>
-              <div className="mt-1 text-lg font-bold text-white">1 & 2 Dòng</div>
-            </div>
-          </div>
+    <div className="workflow-heading"><div><span className="step-number">01</span><h2>Không gian nhận diện</h2><span className="desktop-label">Ảnh đầu vào → Kết quả phân tích</span></div><span className="supported-label"><Layers size={14} aria-hidden="true" /> Hỗ trợ biển 1 & 2 dòng</span></div>
+    {errorMessage && <div className="error-notice" role="alert"><AlertCircle size={19} aria-hidden="true" /><span>{errorMessage}</span>{selectedFile && !isLoading && <button onClick={() => void processImage(selectedFile)}>Thử lại</button>}<button onClick={() => setErrorMessage(null)} aria-label="Đóng thông báo lỗi"><X size={16} aria-hidden="true" /></button></div>}
+    {detectionResponse?.warnings?.map(warning => <div key={warning} className="error-notice" role="status"><AlertCircle size={19} aria-hidden="true" /><span>{warning}</span></div>)}
+    {detectionResponse && results.length === 0 && <p className="mb-4 text-xs text-slate-500">Đã xử lý trong {(detectionResponse.processing_time_ms / 1000).toFixed(2)} giây. Chưa đọc được biển số đủ tin cậy.</p>}
+    <section className="recognition-grid">
+      <div className="upload-panel">
+        <div className="panel-heading"><div><FileImage size={17} aria-hidden="true" /><h3>Ảnh phương tiện</h3></div><span className="panel-meta">{selectedFile ? `${(selectedFile.size / 1024 / 1024).toFixed(2)} MB` : "JPG, PNG, WEBP"}</span></div>
+        <div className={`image-stage ${previewUrl ? "has-image" : ""} ${isDragging ? "is-dragging" : ""}`} onDragOver={event => { event.preventDefault(); setIsDragging(true); }} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDragging(false); }} onDrop={onDrop}>
+          {previewUrl ? <>
+            <img className="vehicle-image" src={annotated && annotatedUrl ? annotatedUrl : previewUrl} alt="Ảnh phương tiện được chọn để nhận diện biển số" />
+            <div className="image-actions"><button disabled={isLoading} onClick={() => fileInputRef.current?.click()}><ImagePlus size={14} aria-hidden="true" /> Thay ảnh</button><button onClick={reset} aria-label="Xóa ảnh và bắt đầu lại"><X size={16} aria-hidden="true" /></button></div>
+            {annotatedUrl && !isLoading && <button className="annotation-toggle" onClick={() => setAnnotated(!annotated)} aria-pressed={annotated}><Focus size={14} aria-hidden="true" /> {annotated ? "Đang hiện vùng nhận diện" : "Đang xem ảnh gốc"}</button>}
+          </> : <div className="upload-empty">
+            <div className="scan-illustration" aria-hidden="true"><span className="corner top-left" /><span className="corner top-right" /><span className="corner bottom-left" /><span className="corner bottom-right" /><div className="illustrated-plate"><ScanLine size={32} /><div><i /><i /><i /></div></div><span className="scan-beam" /></div>
+            <span className="canvas-tag">IMAGE RECOGNITION</span><h3>Bắt đầu từ một hình ảnh</h3><p>Kéo thả ảnh phương tiện vào đây<br />hoặc chọn ảnh từ thiết bị của bạn.</p>
+            <button className="primary-button upload-cta" onClick={() => fileInputRef.current?.click()}><Upload size={17} aria-hidden="true" /> Chọn hình ảnh <ArrowRight size={16} aria-hidden="true" /></button><span className="upload-limit">JPG, PNG hoặc WEBP · Tối đa 10 MB</span>
+          </div>}
+          {isLoading && <div className="analysis-overlay" role="status"><div className="analysis-spinner"><LoaderCircle size={30} aria-hidden="true" /></div><h3>Đang đọc biển số…</h3><p>Hệ thống đang phát hiện vùng biển và phân tích ký tự.</p><span className="loading-track"><span /></span></div>}
+          {isDragging && <div className="drop-overlay"><Upload size={36} aria-hidden="true" /><strong>Thả ảnh để bắt đầu nhận diện</strong></div>}
         </div>
-      </section>
+        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onFileChange} className="sr-only" aria-label="Chọn ảnh phương tiện" />
+        <div className="upload-footer"><span><ShieldCheck size={14} aria-hidden="true" />{selectedFile ? selectedFile.name : "Ảnh rõ nét giúp kết quả chính xác hơn"}</span><span>{detectionResponse ? `${results.length} biển được nhận diện` : "Tự động phân tích sau khi tải"}</span></div>
+      </div>
 
-      {/* Main Workspace: Upload & Preview */}
-      <section className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-        {/* Left Column: Upload Area */}
-        <div className="lg:col-span-7 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-white">Tải Lên Hình Ảnh Phương Tiện</h3>
-            <span className="text-xs text-slate-400">Hỗ trợ JPG, PNG, WEBP</span>
-          </div>
-
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setIsDragging(false);
-              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                const file = e.dataTransfer.files[0];
-                setSelectedFile(file);
-                setPreviewUrl(URL.createObjectURL(file));
-              }
-            }}
-            className={`relative flex min-h-[340px] flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all ${
-              isDragging
-                ? "border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/10"
-                : "border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/60"
-            }`}
-          >
-            {previewUrl ? (
-              <div className="relative flex w-full flex-col items-center gap-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={previewUrl}
-                  alt="Ảnh phương tiện xem trước"
-                  className="max-h-[260px] rounded-lg object-contain shadow-md"
-                />
-                <label className="cursor-pointer rounded-lg bg-slate-800 px-4 py-2 text-xs font-medium text-slate-200 hover:bg-slate-700 transition">
-                  Chọn ảnh khác
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-400 border border-blue-500/20">
-                  <Upload className="h-6 w-6" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-200">
-                    Kéo và thả ảnh phương tiện vào đây
-                  </p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    hoặc nhấp chuột để duyệt file từ máy tính
-                  </p>
-                </div>
-                <label className="cursor-pointer mt-2 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition">
-                  Chọn tệp ảnh
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            )}
-          </div>
+      <aside className="results-panel" aria-label="Kết quả nhận diện">
+        <div className="panel-heading"><div><ScanLine size={17} aria-hidden="true" /><h3>Kết quả nhận diện</h3></div><span className={`result-status ${activeResult ? "done" : ""}`}><span />{isLoading ? "Đang phân tích" : detectionResponse ? "Hoàn tất" : "Chờ hình ảnh"}</span></div>
+        <div className="result-content" aria-live="polite" aria-busy={isLoading}>
+          {results.length > 1 && <div className="result-tabs" aria-label="Chọn biển số">{results.map((result, index) => <button key={`${result.plate_number}-${index}`} className={activeIndex === index ? "active" : ""} aria-pressed={activeIndex === index} onClick={() => { setActiveIndex(index); setCopied(false); }}>Biển {String(index + 1).padStart(2, "0")}</button>)}</div>}
+          {activeResult ? <>
+            <div className="plate-label"><span>BIỂN SỐ NHẬN DIỆN</span><button className="icon-button" onClick={copyPlate} aria-label={copied ? "Đã sao chép biển số" : "Sao chép biển số"}>{copied ? <CheckCheck size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}</button></div>
+            <div className="license-plate">{activeResult.plate_number}</div>
+            <span className={`validation-label ${activeResult.is_valid_format ? "valid" : ""}`}><ShieldCheck size={14} aria-hidden="true" />{activeResult.is_valid_format ? "Khớp cấu trúc biển số · Cần đối chiếu ảnh" : "Cần kiểm tra lại kết quả"}</span>
+            <div className="confidence-section"><div><span>Độ tin cậy nhận diện</span><strong>{confidence.toFixed(1)}<small>%</small></strong></div><div className="confidence-track"><span style={{ width: `${confidence}%` }} /></div></div>
+            <div className="result-details"><div><span>Thời gian xử lý</span><strong>{((detectionResponse?.processing_time_ms ?? 0) / 1000).toFixed(2)} giây</strong></div><div><span>Loại biển số</span><strong>{activeResult.plate_type === "two_line" ? "Biển 2 dòng" : activeResult.plate_type === "one_line" ? "Biển 1 dòng" : "Chưa xác định"}</strong></div></div>
+            <div className="crop-heading"><span>Vùng biển số đã tách</span>{cropUrl && <a href={cropUrl} target="_blank" rel="noreferrer">Mở ảnh <ArrowUpRight size={13} aria-hidden="true" /></a>}</div><div className="crop-preview">{cropUrl ? <img src={cropUrl} alt={`Vùng biển số ${activeResult.plate_number}`} /> : <span>Không có ảnh biển số</span>}</div>
+            <Link href="/history" className="saved-note"><Check size={14} aria-hidden="true" /> Kết quả đã được lưu trong lịch sử <ArrowUpRight size={13} aria-hidden="true" /></Link>
+          </> : <div className="result-empty"><div className="empty-result-symbol"><ScanLine size={30} aria-hidden="true" /><span className="empty-result-line" /></div><h3>{isLoading ? "Kết quả đang được chuẩn bị" : detectionResponse ? "Chưa đọc được biển số" : "Sẵn sàng cho ảnh đầu tiên"}</h3><p>{isLoading ? "Biển số, độ tin cậy và ảnh đã tách sẽ xuất hiện ngay tại đây." : detectionResponse ? "Hãy thử ảnh chụp gần hơn, đủ sáng và nhìn rõ toàn bộ biển số." : "Tải một ảnh phương tiện để xem biển số, độ tin cậy và thông tin phân tích."}</p><div className="empty-data-rows"><span>Biển số nhận diện <i>—</i></span><span>Độ tin cậy <i>—</i></span><span>Thời gian xử lý <i>—</i></span></div>{detectionResponse && <button className="secondary-button" onClick={() => fileInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" /> Chọn ảnh khác</button>}</div>}
         </div>
-
-        {/* Right Column: Result Panel (Contract Mock Demonstration) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-white">Kết Quả Nhận Diện</h3>
-            <span className="rounded-md bg-slate-800 px-2 py-0.5 text-xs text-slate-400">
-              Contract Schema v1.0
-            </span>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <div>
-                <p className="text-xs text-slate-400">Biển số phát hiện</p>
-                <div className="mt-1 flex items-center gap-3">
-                  <span className="rounded-lg bg-amber-400/10 px-3 py-1 font-mono text-2xl font-black tracking-widest text-amber-300 border border-amber-400/20">
-                    {mockResult.results[0].plate_number}
-                  </span>
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-slate-400">Độ tin cậy</p>
-                <span className="text-lg font-bold text-emerald-400">
-                  {(mockResult.results[0].confidence * 100).toFixed(1)}%
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-lg bg-slate-950 p-3 border border-slate-800/80">
-                <span className="text-slate-500 block">Phân loại biển</span>
-                <span className="font-semibold text-slate-200 mt-0.5 block capitalize">
-                  {mockResult.results[0].plate_type === "two_line"
-                    ? "Biển vuông (2 dòng)"
-                    : "Biển dài (1 dòng)"}
-                </span>
-              </div>
-              <div className="rounded-lg bg-slate-950 p-3 border border-slate-800/80">
-                <span className="text-slate-500 block">Định dạng Regex VN</span>
-                <span className="font-semibold text-emerald-400 mt-0.5 block">
-                  Hợp lệ (Chuẩn VN)
-                </span>
-              </div>
-              <div className="rounded-lg bg-slate-950 p-3 border border-slate-800/80">
-                <span className="text-slate-500 block">Toạ độ BBox [x1,y1,x2,y2]</span>
-                <span className="font-mono text-slate-300 mt-0.5 block text-[11px]">
-                  [{mockResult.results[0].bbox.join(", ")}]
-                </span>
-              </div>
-              <div className="rounded-lg bg-slate-950 p-3 border border-slate-800/80">
-                <span className="text-slate-500 block">Thời gian xử lý</span>
-                <span className="font-semibold text-blue-400 mt-0.5 block">
-                  {mockResult.processing_time_ms} ms
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
-              <p className="text-[11px] font-mono text-slate-400">
-                Data Contract Status: <span className="text-emerald-400 font-bold">READY</span>
-              </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Frontend đã sẵn sàng cắm kết nối với API <code className="text-slate-300">/api/license-plates/detect</code> trong Phase 4.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
+      </aside>
+    </section>
+    <section className="how-it-works" aria-label="Hướng dẫn nhận diện"><div className="guide-intro"><span className="eyebrow">ĐƠN GIẢN TRONG 3 BƯỚC</span><h2>Từ hình ảnh<br />đến thông tin.</h2></div>{[{ number: "01", icon: Upload, title: "Tải ảnh phương tiện", text: "Chọn ảnh rõ nét, nhìn thấy toàn bộ biển số." }, { number: "02", icon: Focus, title: "Tự động nhận diện", text: "Hệ thống tìm vùng biển và đọc các ký tự." }, { number: "03", icon: History, title: "Xem và lưu kết quả", text: "Đối chiếu biển số và tra cứu lại trong lịch sử." }].map(({ number, icon: Icon, title, text }) => <div className="guide-step" key={number}><div><Icon size={20} aria-hidden="true" /><span>{number}</span></div><h3>{title}</h3><p>{text}</p></div>)}</section>
+    <div className="quality-tip"><ShieldCheck size={17} aria-hidden="true" /><p><strong>Mẹo cho kết quả tốt hơn</strong> Dùng ảnh đủ sáng, hạn chế rung mờ và tránh che khuất ký tự trên biển số.</p><ArrowDown size={16} aria-hidden="true" /></div>
+  </div>;
 }
