@@ -1,6 +1,6 @@
 # HƯỚNG DẪN QUY CHUẨN DỮ LIỆU BIỂN SỐ XE (DATASET GUIDELINES)
-> **Phụ trách:** Người 1 (Data Engineer & QA)  
-> **Dự án:** Automatic License Plate Recognition (ALPR)
+> **Phụ trách:** Người 1 (Kỳ Duyên - Data Engineer & Preprocessing)  
+> **Dự án:** Automatic License Plate Recognition (ALPR) Cho Biển Số Xe Việt Nam
 
 ---
 
@@ -13,7 +13,7 @@ Nhằm đảm bảo mô hình phát hiện biển số (YOLO) hoạt động tin
    - **Ô tô (Car / SUV / Truck):** Biển 1 dòng (dài) và biển 2 dòng (sau xe), chiếm khoảng 50%.
 2. **Đa dạng điều kiện ngoại cảnh:**
    - Ban ngày / ánh sáng tự nhiên đầy đủ: ~60%.
-   - Ban đêm / ánh sáng đèn đường, đèn pha: ~25%.
+   - Ban đêm / ánh sáng đèn đường, đèn pha, trong hầm: ~25%.
    - Điều kiện thời tiết bất lợi (mưa, chói nắng, bóng râm gắt): ~15%.
 3. **Đa dạng góc chụp & khoảng cách:**
    - Chụp thẳng trực diện: góc lệch $< 15^\circ$.
@@ -24,7 +24,7 @@ Nhằm đảm bảo mô hình phát hiện biển số (YOLO) hoạt động tin
 
 ## 🏷️ 2. Quy ước đặt tên tệp tin (File Naming Conventions)
 
-Tất cả các ảnh đưa vào [data/raw/](file:///d:/present/license_plate_recognition/data/raw) bắt buộc phải tuân theo quy tắc sau:
+Tất cả các ảnh đưa vào `data/raw/` bắt buộc phải tuân theo quy tắc sau:
 - **Không có dấu tiếng Việt, không chứa khoảng trắng (space)**.
 - Định dạng chuẩn: `<loai_xe>_<so_thu_tu>.<duoi_anh>`
 - Ví dụ:
@@ -66,8 +66,18 @@ names: ['license_plate']
 
 ---
 
-## 📁 5. Hiện trạng dữ liệu Phase 1
+## 🔄 5. Chiến lược Tăng cường Dữ liệu (Data Augmentation)
+
+Nhằm nâng cao khả năng chống chịu của mô hình trước các điều kiện thực tế bất lợi, Người 1 áp dụng các kỹ thuật augmentation trong `PlatePreprocessor.augment_plate`:
+- **Biến đổi góc xoay (Rotation):** Xoay ngẫu nhiên trong khoảng $[-10^\circ, +10^\circ]$ mô phỏng góc chụp nghiêng của camera.
+- **Biến đổi độ sáng & tương phản (Photometric Distortion):** Dao động $\pm 20\%$ cường độ sáng ($beta \in [-25, 25]$) và tương phản ($alpha \in [0.8, 1.2]$).
+- **Nhiễu hạt Gaussian:** Tạo nhiễu hạt nhẹ ($\sigma = 8$) mô phỏng cảm biến camera trong môi trường thiếu sáng.
+
+---
+
+## 📁 6. Hiện trạng dữ liệu Phase 1
 
 - Đã thu thập và tiền xử lý 30 ảnh mẫu ban đầu đặt tại `data/raw/sample_detection/` (gồm 15 ảnh xe máy và 15 ảnh ô tô kèm nhãn YOLO TXT).
-- Đã chuẩn bị 30 ảnh crop mẫu độc lập tại `data/raw/sample_cropped_plates/` phục vụ thử nghiệm OCR.
+- Đã chuẩn bị 30 ảnh crop mẫu độc lập tại `data/raw/sample_cropped_plates/` phục vụ thử nghiệm OCR (15 biển 1 dòng và 15 biển 2 dòng).
+- Đã chuẩn bị bộ 40 ca kiểm thử thực tế tại `data/test_cases/` (blurred, low_light, obscured, skewed) kèm `ground_truth.json`.
 - Sẵn sàng mở rộng lên 1.500+ ảnh trong Phase 2.
