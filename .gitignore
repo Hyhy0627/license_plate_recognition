@@ -34,17 +34,8 @@ data/auth_verification/
 data/benchmarks/
 data/notebook_runs/
 data/recognition_regression/
-# Browser tests: ignore everything except the fixed regression inputs below.
-# ui_test_results.json is also a label source for check_regression.py.
-/data/test_real_web/**
-!/data/test_real_web/car_30A_11111.jpg
-!/data/test_real_web/car_30A_88888.jpg
-!/data/test_real_web/motorbike_69B1_77777.png
-!/data/test_real_web/sources.json
-!/data/test_real_web/ui_test_results.json
-!/data/test_real_web/hard_cases_20261105/
-!/data/test_real_web/hard_cases_20261105/cases.json
-!/data/test_real_web/hard_cases_20261105/input_hashes.json
+# Browser test inputs and evidence stay local.
+/data/test_real_web/
 !data/raw/.gitkeep
 !data/outputs/cropped_plates/.gitkeep
 !data/outputs/final_results/.gitkeep

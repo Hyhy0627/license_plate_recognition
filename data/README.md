@@ -1,43 +1,28 @@
-# Dữ liệu của dự án
+# Dữ liệu dự án
 
-Các đường dẫn dưới đây tính từ thư mục gốc repository. Dữ liệu được giữ theo mục đích sử dụng, không cần tải mọi thư mục vào ứng dụng.
+Các đường dẫn tính từ thư mục gốc repository. Git giữ tài liệu này, bộ ảnh và nhãn trong `test_cases/`, cùng các tệp `.gitkeep` của `raw/` và `outputs/`. Database, ảnh đầu ra và bằng chứng chạy thử được giữ cục bộ theo `.gitignore`; bản clone mới không có sẵn lịch sử nhận diện.
 
-| Đường dẫn | Mục đích | Khi dọn dữ liệu |
-|---|---|---|
-| `data/alpr.db` | Tài khoản, phiên và lịch sử nhận diện | Giữ; không xóa để dọn cache |
-| `data/outputs/` | Ảnh cắt và ảnh đánh dấu của các lần nhận diện | Giữ ảnh còn được database hoặc bằng chứng kiểm thử tham chiếu |
-| `data/test_cases/` | Ảnh tổng hợp và `ground_truth.json` dùng cho benchmark/notebook | Giữ nguyên ảnh và nhãn đối chứng |
-| `data/test_real_web/` | Ảnh thật, nguồn ảnh, nhãn và bằng chứng kiểm thử web | Git chỉ nhận bộ đầu vào cố định bên dưới; bằng chứng chạy thử giữ cục bộ |
-| `data/recognition_regression/` | Các lượt đối chứng local/hybrid, ảnh ca khó và kết quả trước/sau | Giữ mốc trước/sau và các fixture mà manifest sử dụng; có thể lưu trữ các lượt trung gian |
-| `data/benchmarks/` | Kết quả benchmark offline | Giữ lượt được notebook hoặc tài liệu tham chiếu |
-| `data/notebook_runs/` | Bản notebook đã chạy | Giữ lượt hoàn tất mới nhất; có thể dọn lượt lỗi hoặc thư mục rỗng |
-| `data/auth_verification/` | Bằng chứng QA tài khoản và log dịch vụ | Giữ lượt QA được dẫn trong tài liệu; không dọn log đang được dịch vụ sử dụng |
-| `data/raw/` | Chỗ đặt dữ liệu thô khi cần | Hiện giữ `.gitkeep` để duy trì cấu trúc |
+| Đường dẫn | Nội dung |
+|---|---|
+| `data/alpr.db` | Tài khoản, phiên và lịch sử nhận diện. Không xóa khi dọn cache. |
+| `data/outputs/` | Ảnh cắt biển số và ảnh đánh dấu; có thể được database tham chiếu. |
+| `data/test_cases/` | Ảnh tổng hợp và `ground_truth.json` cho kiểm thử, benchmark và notebook. |
+| `data/test_real_web/` | Ảnh thật, nguồn ảnh, nhãn đối chứng và bằng chứng kiểm thử web. |
+| `data/recognition_regression/` | Manifest, ảnh và kết quả so sánh các lượt nhận diện. |
+| `data/benchmarks/` | Kết quả benchmark offline. |
+| `data/notebook_runs/` | Bản notebook đã thực thi. |
+| `data/auth_verification/` | Bằng chứng QA tài khoản và log dịch vụ. |
+| `data/raw/` | Dữ liệu thô để bổ sung tập huấn luyện; hiện chỉ có `.gitkeep`. |
 
-## Tệp kiểm thử web được đưa lên Git
+## Quy ước khi bổ sung dữ liệu
 
-`.gitignore` bỏ qua mặc định toàn bộ `data/test_real_web/`, chỉ cho phép 7 tệp:
+- Giữ ảnh gốc, nguồn ảnh và nhãn đối chứng đã xác minh để các lượt kiểm thử trước/sau dùng cùng đầu vào.
+- Đặt tên ảnh trong `data/raw/` không dấu, không khoảng trắng; ví dụ `car_001.jpg`, `bike_001.jpg`.
+- Với nhãn YOLO cho vùng biển số, dùng một lớp `license_plate` (ID `0`), vẽ khung sát toàn bộ biển và không cắt mất ký tự. Bỏ qua biển che khuất quá nặng hoặc không xác định được vị trí.
+- Nếu tạo bộ huấn luyện mới, cân đối xe máy/ô tô, ngày/đêm, thời tiết và góc chụp; tách tập train/validation/test, ví dụ theo tỷ lệ 70/20/10. Đây là hướng dẫn thu thập, không phải mô tả dữ liệu hiện có.
 
-- Ba ảnh mẫu: `car_30A_11111.jpg`, `car_30A_88888.jpg`, `motorbike_69B1_77777.png`.
-- `sources.json`: nguồn ảnh và nhãn biển số đối chứng.
-- `ui_test_results.json`: tuy có kết quả UI, công cụ `tool/check_recognition_regression.py` hiện vẫn đọc tệp này để lấy ảnh và nhãn đối chứng.
-- `hard_cases_20261105/cases.json` và `hard_cases_20261105/input_hashes.json`: danh sách ca khó, nhãn và mã băm ảnh đầu vào.
+## Theo dõi và dọn dữ liệu
 
-Ảnh chụp màn hình, log, báo cáo, kết quả từng lượt và tệp mới khác trong thư mục này chỉ lưu cục bộ. Quy tắc Git không xóa dữ liệu trên máy. Khi bổ sung ảnh hoặc manifest dùng chung, cập nhật danh sách ngoại lệ trong `.gitignore`.
+`data/test_real_web/` được giữ cục bộ và không đưa lên Git. Lệnh hồi quy nên nhận manifest riêng qua `tool/check_regression.py --cases <đường-dẫn-manifest>`. Nếu chạy công cụ không có `--cases`, nó dùng ảnh và nhãn cục bộ trong thư mục này; bản clone mới sẽ không có các tệp đó.
 
-## Những mốc đang được dùng
-
-- Notebook 01 dùng `data/recognition_regression/hardening_20261105/all_cases.json`.
-- Notebook 03 dùng benchmark `20261105T084132_896570Z`, lượt local trước `20261105T091906_946715Z_hardening_before_local`, lượt sau `20261105T093925_904428Z_hardening_final_local` và bằng chứng Brave trong `hardening_20261105/before_ui/`.
-- Bộ đối chứng âm tính trong các manifest vẫn tham chiếu hai ảnh ở `20261105T081832_650282Z_before`. Không xóa thư mục này chỉ vì tên chứa ngày cũ.
-- Bằng chứng QA tài khoản được dẫn từ [tài liệu QA](../docs/QA_TESTER.md). Một số lượt cũ còn được giữ vì là đầu vào hoặc bằng chứng cho các so sánh đó.
-
-## Lần dọn ngày 06/11/2026
-
-Đã bỏ khỏi `data` các lượt chạy dở, lượt trung gian đã có kết quả thay thế, ảnh chẩn đoán tạm và ảnh đầu ra không được database hay JSON bằng chứng còn lại tham chiếu. Database, bộ nhãn, ảnh đầu vào, kết quả đối chứng được giữ nguyên.
-
-Đợt dọn này loại bỏ 236 tệp dư và 32 thư mục rỗng. Bản sao khôi phục đã được xóa theo yêu cầu sau khi xác minh 539 tệp dữ liệu được giữ lại cùng 47 tệp mã nguồn, cấu hình và trọng số không thay đổi. Database vẫn giữ 110 bản ghi lịch sử. Các tệp đã dọn không còn bản sao trong dự án.
-
-Không coi mọi thư mục có ngày trong tên là dữ liệu rác. Trước khi dọn lượt tiếp theo, đối chiếu đường dẫn trong notebook, manifest, tài liệu QA và các URL ảnh trong database. Giữ ảnh/nhãn cố định khi so sánh trước–sau.
-
-Hướng dẫn nhãn ban đầu: [dataset_guidelines.md](dataset_guidelines.md).
+Trước khi xóa một lượt chạy, kiểm tra tham chiếu trong notebook, manifest, [tài liệu QA](../docs/QA_TESTER.md) và các URL ảnh trong database. Notebook 01 dùng `data/recognition_regression/hardening_20261105/all_cases.json`; Notebook 03 trỏ tới các lượt benchmark và hồi quy ngày 05/11/2026. Một số manifest còn dùng ảnh ở `20261105T081832_650282Z_before`; không xóa chỉ vì tên thư mục cũ. Xem thêm [hướng dẫn notebook](../notebooks/README.md).

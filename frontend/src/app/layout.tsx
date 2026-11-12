@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "./auth.css";
+import "./auth-pixel.css";
+import "./workspace-pixel.css";
 import AppFrame from "../components/app-frame";
 import { AuthProvider } from "../components/auth-provider";
 import { Suspense } from "react";

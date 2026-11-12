@@ -1,0 +1,171 @@
+/* PlateSight auth screen. Scoped to avoid changing the workspace styles. */
+
+.ps-auth-page { display: grid; grid-template-columns: 1fr 1fr; height: 100vh; height: 100dvh; overflow: hidden; background: #111C28; color: #F0F6FC; color-scheme: dark; }
+.ps-story-panel { position: relative; min-width: 0; min-height: 0; overflow: hidden; border-right: 1px solid #283B4E; background: radial-gradient(circle at 48% 60%, #1b3241 0, #132231 43%, #111c28 78%); }
+.ps-story-inner { position: relative; z-index: 2; display: flex; flex-direction: column; height: 100%; padding: clamp(24px, 3.2vw, 50px) clamp(28px, 5vw, 84px) clamp(24px, 3.2vw, 46px); }
+.ps-brand-mark { background: linear-gradient(135deg, #6953a8 0%, #264967 52%, #35C6D9 100%); box-shadow: 0 0 22px #35c6d925, inset 0 1px 0 #ffffff50; }
+.ps-story-copy { margin-top: clamp(26px, 5.6vh, 74px); }
+.ps-story-title { font-size: clamp(38px, 3.5vw, 58px); line-height: 1.11; letter-spacing: -.045em; }
+.ps-pixel-scene { position: relative; flex: 1 1 auto; min-height: 130px; max-height: 315px; margin: 18px -18px 0; overflow: hidden; isolation: isolate; background: linear-gradient(180deg, #111e31 0%, #193446 62%, #315362 100%); border: 1px solid #345165; border-radius: 14px; box-shadow: inset 0 0 0 4px #172b3a, 0 16px 42px #07121d55; }
+.ps-pixel-scene::after { content: ''; position: absolute; z-index: 5; inset: 0; pointer-events: none; background: linear-gradient(90deg, #111c2840, transparent 20% 80%, #111c283b); }
+.ps-star-field { position: absolute; inset: 0 0 32%; opacity: .78; background-image: radial-gradient(#f4d6b0 1.2px, transparent 1.7px), radial-gradient(#76b8c8 1px, transparent 1.6px); background-size: 67px 51px, 93px 61px; background-position: 14px 12px, 40px 28px; }
+.ps-pixel-moon { position: absolute; width: clamp(64px, 8vw, 118px); aspect-ratio: 1; left: 12%; top: 13%; background: #F4B77D; box-shadow: 0 0 35px #f4b77d35; clip-path: polygon(25% 0,75% 0,75% 7%,88% 7%,88% 18%,96% 18%,96% 30%,100% 30%,100% 70%,96% 70%,96% 82%,88% 82%,88% 93%,75% 93%,75% 100%,25% 100%,25% 93%,12% 93%,12% 82%,4% 82%,4% 70%,0 70%,0 30%,4% 30%,4% 18%,12% 18%,12% 7%,25% 7%); }
+.ps-pixel-moon::after { content: ''; position: absolute; inset: 58% 0 0; background: repeating-linear-gradient(180deg, transparent 0 9px, #d88177 9px 13px); opacity: .55; }
+.ps-skyline { position: absolute; left: -5%; bottom: 26%; width: 110%; height: 53%; background: #1a3448; clip-path: polygon(0 100%,0 66%,5% 66%,5% 42%,9% 42%,9% 57%,13% 57%,13% 26%,18% 26%,18% 39%,22% 39%,22% 62%,27% 62%,27% 18%,31% 18%,31% 8%,34% 8%,34% 42%,38% 42%,38% 57%,43% 57%,43% 31%,48% 31%,48% 49%,52% 49%,52% 16%,58% 16%,58% 34%,63% 34%,63% 63%,68% 63%,68% 27%,72% 27%,72% 43%,77% 43%,77% 13%,81% 13%,81% 38%,86% 38%,86% 53%,91% 53%,91% 26%,95% 26%,95% 57%,100% 57%,100% 100%); }
+.ps-skyline::after { content: ''; position: absolute; inset: 0; opacity: .55; background: repeating-linear-gradient(90deg, transparent 0 23px, #f4b77d 23px 27px, transparent 27px 49px), repeating-linear-gradient(0deg, transparent 0 17px, #f4b77d 17px 21px, transparent 21px 37px); mask-image: linear-gradient(180deg, transparent 32%, #000 34%); }
+.ps-skyline-near { bottom: 25%; height: 34%; opacity: .95; background: #102738; transform: scaleX(-1); }
+.ps-road { position: absolute; inset: 74% 0 0; background: linear-gradient(#273b4b, #101d2a); border-top: 5px solid #658a94; }
+.ps-road::before { content: ''; position: absolute; top: 45%; left: -100%; width: 200%; height: 5px; background: repeating-linear-gradient(90deg, #b7a696 0 55px, transparent 55px 115px); animation: ps-road-move 1.3s linear infinite; }
+.ps-road-glow { position: absolute; z-index: 1; left: 15%; right: 9%; bottom: 13%; height: 8%; background: #35c6d92d; filter: blur(18px); }
+.ps-car-unit { position: absolute; z-index: 3; width: clamp(260px, 38vw, 560px); max-width: 90%; left: 49%; bottom: 12%; transform: translateX(-50%); animation: ps-car-idle 3s ease-in-out infinite; }
+.ps-car-unit > img { width: 100%; height: auto; display: block; overflow: visible; filter: drop-shadow(0 10px 0 #081522aa); }
+.ps-scan-box { position: absolute; left: 85.4%; top: 66.4%; width: 11.3%; height: 12%; border: 2px dashed #35C6D9; box-shadow: 0 0 12px #35c6d9, inset 0 0 7px #35c6d977; animation: ps-scan-blink 1.2s steps(2, end) infinite; }
+.ps-scan-box::before, .ps-scan-box::after { content: ''; position: absolute; width: 7px; height: 7px; border-color: #f4b77d; }
+.ps-scan-box::before { left: -3px; top: -3px; border-left: 3px solid; border-top: 3px solid; }
+.ps-scan-box::after { right: -3px; bottom: -3px; border-right: 3px solid; border-bottom: 3px solid; }
+.ps-scan-tag { position: absolute; right: -2px; bottom: calc(100% + 6px); width: max-content; padding: 3px 5px; color: #111C28; background: #35C6D9; font: 700 9px/1.1 ui-monospace, monospace; letter-spacing: .02em; box-shadow: 0 0 12px #35c6d988; }
+.ps-scene-caption { position: absolute; z-index: 6; bottom: 10px; left: 12px; color: #c7e9ed; opacity: .78; font: 600 9px/1.2 ui-monospace, monospace; letter-spacing: .13em; }
+.ps-benefits { display: grid; gap: 10px; margin-top: clamp(18px, 3vh, 28px); }
+.ps-benefits li { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #c5d4df; }
+.ps-benefit-check { display: grid; width: 19px; height: 19px; flex: none; place-items: center; border: 1px solid #35c6d960; border-radius: 5px; color: #35C6D9; background: #35c6d910; }
+
+/* Form remains compact enough for laptop and phone heights. */
+.ps-form-panel { display: grid; min-width: 0; min-height: 0; place-items: center; padding: 24px; background: radial-gradient(circle at 75% 16%, #1b3040 0, #111c28 43%); }
+.ps-auth-card { width: min(100%, 464px); padding: clamp(25px, 3vw, 40px); background: #1B2B3A; border: 1px solid #283B4E; border-radius: 20px; box-shadow: 0 24px 70px #050f1bb8, inset 0 1px 0 #ffffff09; }
+.ps-auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid #283B4E; border-radius: 11px; background: #142330; }
+.ps-auth-tabs a { min-height: 38px; border-radius: 8px; color: #8B9CAE; font-size: 13px; font-weight: 600; transition: color .2s, background .2s, box-shadow .2s; }
+.ps-auth-tabs a:hover { color: #F0F6FC; }
+.ps-auth-tabs a[aria-current="page"] { color: #35C6D9; background: #263d4c; box-shadow: 0 2px 8px #07141e99; }
+.ps-auth-field { margin-top: 17px; }
+.ps-field-label { display: block; margin-bottom: 8px; color: #d9e4ec; font-size: 12px; font-weight: 650; }
+.ps-field-wrap { position: relative; }
+.ps-field-icon { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); color: #70889b; pointer-events: none; }
+.ps-field-input { width: 100%; height: 48px; padding: 0 44px; border: 1px solid #283B4E; border-radius: 10px; background: #111C28; color: #F0F6FC; font-family: inherit; font-size: 13px; font-weight: 400; transition: border-color .2s, box-shadow .2s; }
+.ps-field-input::placeholder { color: #74889a; }
+.ps-field-input:focus { border-color: #35C6D9; box-shadow: 0 0 0 3px #35c6d91a; outline: none; }
+.ps-field-input:-webkit-autofill { -webkit-text-fill-color: #F0F6FC; -webkit-box-shadow: 0 0 0 1000px #111C28 inset; }
+.ps-eye-button { position: absolute; top: 2px; right: 2px; display: grid; width: 44px; height: 44px; place-items: center; border-radius: 8px; color: #8B9CAE; transition: color .2s, background .2s; }
+.ps-eye-button:hover { color: #35C6D9; background: #203546; }
+.ps-eye-button svg { width: 18px; height: 18px; }
+.ps-text-link { transition: color .2s, text-shadow .2s; }
+.ps-text-link:hover { color: #7fe6f0; text-shadow: 0 0 12px #35c6d94d; }
+.ps-submit-button { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 48px; margin-top: 23px; border-radius: 10px; background: #35C6D9; color: #111C28; font-size: 13px; font-weight: 800; box-shadow: 0 7px 22px #35c6d929; transition: transform .2s, background .2s, box-shadow .2s; }
+.ps-submit-button:hover { transform: translateY(-2px); background: #5cdae9; box-shadow: 0 10px 30px #35c6d960; }
+.ps-submit-button:active { transform: translateY(0); }
+.ps-privacy-note { display: flex; align-items: center; justify-content: center; gap: 9px; margin-top: 23px; padding-top: 20px; border-top: 1px solid #283B4E; color: #8B9CAE; font-size: 11px; line-height: 1.45; }
+
+@keyframes ps-car-idle { 50% { transform: translate(-49%, -3px); } }
+@keyframes ps-road-move { to { transform: translateX(115px); } }
+@keyframes ps-scan-blink { 50% { opacity: .48; } }
+
+@media (max-width: 767px) {
+  .ps-auth-page { display: flex; flex-direction: column; }
+  .ps-story-panel { flex: 0 0 33%; border-right: 0; border-bottom: 1px solid #283B4E; }
+  .ps-story-inner { padding: 16px 20px 0; }
+  .ps-brand-mark { width: 37px; height: 37px; }
+  .ps-story-copy { margin-top: 10px; }
+  .ps-story-title { font-size: clamp(23px, 5vw, 28px); line-height: 1.08; }
+  .ps-story-description, .ps-benefits { display: none; }
+  .ps-pixel-scene { min-height: 75px; max-height: none; margin: 8px -20px 0; border: 0; border-radius: 0; box-shadow: none; }
+  .ps-pixel-moon { width: 56px; top: 7%; left: 14%; }
+  .ps-car-unit { width: min(44vw, 180px); left: 65%; bottom: 0; }
+  .ps-scene-caption { display: none; }
+  .ps-scan-tag { font-size: 7px; }
+  .ps-form-panel { flex: 1 1 64%; align-items: start; padding: 0 15px 12px; z-index: 4; background: #111C28; }
+  .ps-auth-card { width: min(100%, 440px); padding: 14px 22px 10px; border-radius: 17px; }
+  .ps-auth-tabs { padding: 3px; }
+  .ps-auth-tabs a { min-height: 32px; }
+  .ps-card-heading { margin-top: 10px !important; }
+  .ps-card-heading h1 { margin-top: 3px !important; font-size: 25px !important; }
+  .ps-card-heading p { margin-top: 3px !important; font-size: 11px !important; line-height: 1.35 !important; }
+  .ps-form { margin-top: 12px; }
+  .ps-auth-field { margin-top: 8px; }
+  .ps-field-label { margin-bottom: 5px; }
+  .ps-field-input { height: 40px; }
+  .ps-eye-button { height: 36px; width: 40px; }
+  .ps-forgot-row { margin-top: 6px !important; }
+  .ps-submit-button { min-height: 40px; margin-top: 13px; }
+  .ps-switch-row { margin-top: 10px !important; }
+  .ps-privacy-note { margin-top: 8px; padding-top: 9px; font-size: 10px; }
+}
+@media (max-width: 767px) and (max-height: 640px) {
+  .ps-story-panel { flex-basis: 30%; }
+  .ps-story-inner { padding-top: 11px; }
+  .ps-story-copy { margin-top: 5px; }
+  .ps-story-title { font-size: clamp(21px, 5.5vw, 27px); }
+  .ps-form-panel { flex-basis: 70%; }
+  .ps-card-heading { margin-top: 9px !important; }
+  .ps-card-heading p { display: none; }
+  .ps-auth-card { padding-top: 12px; padding-bottom: 10px; }
+  .ps-auth-field { margin-top: 9px; }
+  .ps-field-input { height: 36px; }
+  .ps-eye-button { height: 32px; }
+  .ps-submit-button { margin-top: 10px; min-height: 36px; }
+  .ps-privacy-note { margin-top: 8px; padding-top: 7px; }
+}
+@media (max-width: 360px) and (max-height: 640px) {
+  .ps-auth-card { padding-top: 8px; padding-bottom: 8px; }
+  .ps-form { margin-top: 8px; }
+  .ps-privacy-note { margin-top: 6px; }
+}
+@media (max-width: 767px) {
+  .ps-auth-page[data-mode="register"] .ps-story-panel { flex: 0 0 66px; }
+  .ps-auth-page[data-mode="register"] .ps-story-inner { padding-top: 11px; }
+  .ps-auth-page[data-mode="register"] .ps-story-copy, .ps-auth-page[data-mode="register"] .ps-pixel-scene { display: none; }
+  .ps-auth-page[data-mode="register"] .ps-form-panel { flex: 1 1 auto; }
+  .ps-auth-page[data-mode="register"] .ps-auth-card { padding-top: 12px; padding-bottom: 10px; }
+  .ps-auth-page[data-mode="register"] .ps-card-heading { margin-top: 9px !important; }
+  .ps-auth-page[data-mode="register"] .ps-card-heading p:last-child { display: none; }
+  .ps-auth-page[data-mode="register"] .ps-form { margin-top: 8px; }
+  .ps-auth-page[data-mode="register"] .ps-auth-field { margin-top: 7px; }
+  .ps-auth-page[data-mode="register"] .ps-field-label { margin-bottom: 3px; }
+  .ps-auth-page[data-mode="register"] .ps-field-input { height: 34px; }
+  .ps-auth-page[data-mode="register"] .ps-eye-button { height: 30px; }
+  .ps-auth-page[data-mode="register"] .ps-submit-button { min-height: 36px; margin-top: 11px; }
+  .ps-auth-page[data-mode="register"] .ps-privacy-note { margin-top: 8px; padding-top: 8px; }
+}
+@media (max-height: 690px) and (min-width: 768px) {
+  .ps-story-copy { margin-top: 20px; }
+  .ps-story-title { font-size: clamp(32px, 3vw, 46px); }
+  .ps-pixel-scene { margin-top: 10px; }
+  .ps-benefits { margin-top: 12px; }
+  .ps-auth-card { padding: 24px 30px; }
+  .ps-auth-field { margin-top: 12px; }
+  .ps-privacy-note { margin-top: 14px; padding-top: 13px; }
+}
+@media (max-height: 650px) and (min-width: 768px) {
+  .ps-story-inner { padding-top: 20px; padding-bottom: 18px; }
+  .ps-story-copy { margin-top: 12px; }
+  .ps-story-title { font-size: 32px; }
+  .ps-story-description { margin-top: 8px; font-size: 12px; line-height: 1.5; }
+  .ps-pixel-scene { min-height: 100px; max-height: none; margin-top: 8px; }
+  .ps-benefits { gap: 5px; margin-top: 8px; }
+  .ps-benefits li { font-size: 11px; }
+  .ps-form-panel { padding: 12px; }
+  .ps-auth-card { padding: 14px 22px; }
+  .ps-card-heading { margin-top: 8px; }
+  .ps-card-heading h1 { font-size: 28px; }
+  .ps-card-heading p:last-child { margin-top: 4px; font-size: 11px; line-height: 1.4; }
+  .ps-form { margin-top: 12px; }
+  .ps-auth-field { margin-top: 8px; }
+  .ps-field-label { margin-bottom: 5px; }
+  .ps-field-input { height: 40px; }
+  .ps-eye-button { height: 36px; }
+  .ps-forgot-row { margin-top: 6px; }
+  .ps-submit-button { min-height: 40px; margin-top: 12px; }
+  .ps-switch-row { margin-top: 10px; }
+  .ps-privacy-note { margin-top: 10px; padding-top: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ps-auth-page *, .ps-auth-page *::before, .ps-auth-page *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Keep validation feedback visible without shifting the art scene. */
+.ps-auth-page button, .ps-auth-page a { -webkit-tap-highlight-color: transparent; }
+.ps-auth-page button { cursor: pointer; }
+.ps-auth-page button:focus-visible, .ps-auth-page a:focus-visible, .ps-auth-page input:focus-visible { outline: 2px solid #35C6D9; outline-offset: 3px; }
+.ps-auth-page .ps-auth-tabs a { display: grid; place-items: center; }
+.ps-auth-page .ps-auth-error { position: fixed; z-index: 30; top: 16px; right: 16px; width: min(420px, calc(100vw - 32px)); padding: 10px 12px; border: 1px solid #f4b77d70; border-radius: 8px; background: #263744; color: #ffd4ae; font-size: 12px; line-height: 1.45; box-shadow: 0 12px 30px #06111d99; }
+.ps-auth-page .ps-car-plate { position: absolute; left: 87%; top: 67.1%; width: 8%; height: 8.5%; background: #e9f4ee; box-shadow: inset 0 -3px 0 #8eabb3; }
+.ps-auth-page .ps-privacy-note svg { flex: none; color: #35C6D9; }
+body:has(.ps-auth-page) { overflow: hidden; }
