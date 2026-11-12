@@ -11,7 +11,7 @@ from src.evaluation.metrics import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("benchmark_runner", ROOT / "tool/run_phase4_benchmark.py")
+SPEC = importlib.util.spec_from_file_location("benchmark_runner", ROOT / "tool/benchmark.py")
 RUNNER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(RUNNER)
 

@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 from typing import Dict, Any, List
 from src.core.preprocessor import PlatePreprocessor
+from src.core.postprocessor import PlatePostprocessor
 from src.config import settings, BASE_DIR
 from src.utils.logger import logger
 
@@ -19,6 +20,8 @@ class PlateOCREngine:
         self.ninerouter_client = None
         self.yolo_ocr = None
         self.traditional_ocr = None
+        from src.core.line_ocr import LocalLineOCR
+        self.line_ocr = LocalLineOCR(os.path.join(BASE_DIR, 'models', 'easyocr'))
         self._init_ocr()
 
     def _init_ocr(self):
@@ -70,7 +73,7 @@ class PlateOCREngine:
         if self.yolo_ocr is None or img is None or img.size == 0:
             return {"raw_text": "", "plate_type": "unknown", "chars_count": 0, "avg_conf": 0.0}
 
-        results = self.yolo_ocr.predict(img, conf=conf, verbose=False)
+        results = self.yolo_ocr.predict(img, conf=conf, agnostic_nms=True, iou=0.4, verbose=False)
         boxes = results[0].boxes
         if len(boxes) == 0:
             return {"raw_text": "", "plate_type": "unknown", "chars_count": 0, "avg_conf": 0.0}
@@ -110,18 +113,28 @@ class PlateOCREngine:
 
         # Sắp xếp từng dòng từ trái sang phải theo toạ độ X
         text_parts = []
+        row_slopes = []
         for row in rows:
             sorted_row = sorted(row, key=lambda c: c[0][0])
             text_parts.append("".join(c[1] for c in sorted_row))
+            # Use character centres on the same row, not every nonblack pixel
+            # in the crop (which measures the image rectangle, not plate tilt).
+            centres = [((c[0][0] + c[0][2]) / 2, (c[0][1] + c[0][3]) / 2) for c in sorted_row]
+            for i, (x, y) in enumerate(centres):
+                for xx, yy in centres[i + 1:]:
+                    if xx - x > max(heights) and abs((yy - y) / (xx - x)) < 0.5:
+                        row_slopes.append((yy - y) / (xx - x))
 
         raw_text = "".join(text_parts)
         plate_type = "two_line" if len(rows) > 1 else "one_line"
 
         return {
             "raw_text": raw_text,
+            "text_lines": text_parts,
             "plate_type": plate_type,
             "chars_count": len(raw_text),
-            "avg_conf": avg_conf
+            "avg_conf": avg_conf,
+            "skew_angle": float(np.degrees(np.arctan(np.median(row_slopes)))) if row_slopes else 0.0,
         }
 
     def _recognize_with_yolo(self, plate_img: np.ndarray) -> Dict[str, Any]:
@@ -133,35 +146,69 @@ class PlateOCREngine:
         if self.yolo_ocr is None or plate_img is None or plate_img.size == 0:
             return {"raw_text": "", "plate_type": "unknown", "engine_used": "local_yolo"}
 
-        # 1. Kiểm tra xem biển có phải nền tối / nền xanh (biển xanh 80A, 80B,...) hay không
-        is_dark = PlatePreprocessor.is_dark_or_blue_plate(plate_img)
+        # Phóng to crop nhỏ trước OCR để giữ nét ký tự khi biển chiếm ít pixel.
+        height, width = plate_img.shape[:2]
+        upscale = max(1, min(3, int(160 / max(1, height))))
+        ocr_img = plate_img
+        if upscale > 1:
+            ocr_img = cv2.resize(
+                plate_img, (width * upscale, height * upscale),
+                interpolation=cv2.INTER_CUBIC,
+            )
+
+        is_dark = PlatePreprocessor.is_dark_or_blue_plate(ocr_img)
+
+        def best_result(*results):
+            return max(results, key=self._result_quality)
 
         if is_dark:
-            # Biển tối: Ưu tiên chạy ảnh đảo màu trước
-            inverted_img = PlatePreprocessor.invert_plate(plate_img)
-            res_inv = self._predict_yolo_boxes(inverted_img, conf=0.25)
-            if res_inv["chars_count"] >= 6:
-                res_inv["engine_used"] = "local_yolo"
-                return res_inv
-            
-            # Nếu đảo màu chưa đủ, thử thêm ảnh gốc
-            res_orig = self._predict_yolo_boxes(plate_img, conf=0.25)
-            best_res = res_inv if res_inv["chars_count"] >= res_orig["chars_count"] else res_orig
-            best_res["engine_used"] = "local_yolo"
-            return best_res
+            inverted_img = PlatePreprocessor.invert_plate(ocr_img)
+            result = best_result(
+                self._predict_yolo_boxes(inverted_img, conf=0.20),
+                self._predict_yolo_boxes(ocr_img, conf=0.20),
+            )
         else:
-            # Biển trắng thông thường: Chạy ảnh gốc trước
-            res_orig = self._predict_yolo_boxes(plate_img, conf=0.25)
-            if res_orig["chars_count"] >= 7 and res_orig["avg_conf"] >= 0.70:
-                res_orig["engine_used"] = "local_yolo"
-                return res_orig
+            inverted_img = PlatePreprocessor.invert_plate(ocr_img)
+            result = best_result(
+                self._predict_yolo_boxes(ocr_img, conf=0.20),
+                self._predict_yolo_boxes(inverted_img, conf=0.20),
+            )
 
-            # Nếu ảnh gốc ra ít ký tự, thử thêm đảo màu phòng trường hợp ngược sáng/bóng râm
-            inverted_img = PlatePreprocessor.invert_plate(plate_img)
-            res_inv = self._predict_yolo_boxes(inverted_img, conf=0.25)
-            best_res = res_inv if res_inv["chars_count"] > res_orig["chars_count"] else res_orig
-            best_res["engine_used"] = "local_yolo"
-            return best_res
+        # Lần đọc bổ sung ở ngưỡng thấp giữ các ký tự mờ hoặc nhỏ.
+        if not self._result_quality(result)[0] or result.get("avg_conf", 0.0) < 0.65:
+            retry_img = inverted_img if is_dark else ocr_img
+            retry = self._predict_yolo_boxes(retry_img, conf=0.12)
+            result = best_result(result, retry)
+
+        # Worn paint can retain contrast in the original pixels but disappear
+        # after cubic upscaling. Only try thresholding for an unreadable crop;
+        # it is another OCR observation, never a reconstruction of missing text.
+        if not self._result_quality(result)[0]:
+            gray = cv2.cvtColor(plate_img, cv2.COLOR_BGR2GRAY) if plate_img.ndim == 3 else plate_img
+            binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+            threshold_result = self._predict_yolo_boxes(cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR), conf=0.20)
+            result = best_result(result, threshold_result)
+
+        angle = result.get("skew_angle", 0.0)
+        if 2.5 <= abs(angle) <= 25 and 6 <= result.get("chars_count", 0) <= 10:
+            h, w = ocr_img.shape[:2]
+            matrix = cv2.getRotationMatrix2D((w / 2, h / 2), angle, 1)
+            aligned = cv2.warpAffine(ocr_img, matrix, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+            corrected = self._predict_yolo_boxes(aligned, conf=0.20)
+            # A higher mean confidence after dropping a glyph is not an
+            # improvement over a structurally complete observed reading.
+            if not self._result_quality(result)[0] or corrected.get("chars_count", 0) >= result.get("chars_count", 0):
+                result = best_result(result, corrected)
+
+        result["engine_used"] = "local_yolo"
+        return result
+
+    @staticmethod
+    def _result_quality(result):
+        formatted = PlatePostprocessor.format_vietnamese_plate(
+            result.get("raw_text", ""), result.get("plate_type"), result.get("text_lines"))
+        return (PlatePostprocessor.validate_plate(formatted), result.get("avg_conf", 0.0),
+                -abs(result.get("chars_count", 0) - 8))
 
     def read_text(self, plate_img: np.ndarray) -> str:
         """Nhận diện chuỗi ký tự bằng EasyOCR/PaddleOCR dự phòng."""

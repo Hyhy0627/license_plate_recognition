@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 
@@ -18,6 +18,8 @@ class PlateDetectionResponse(BaseModel):
     total_detected: int
     processing_time_ms: float
     results: List[DetectionResult]
+    warnings: List[str] = Field(default_factory=list)
+    cloud_attempts: int = 0
 
 class DetectionHistoryItem(BaseModel):
     id: int

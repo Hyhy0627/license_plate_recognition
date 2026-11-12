@@ -37,11 +37,11 @@ class PlatePostprocessor:
         if not raw_text:
             return ""
         # Chỉ giữ lại A-Z và 0-9
-        cleaned = re.sub(r'[^A-Za-z0-9]', '', raw_text).upper()
+        cleaned = re.sub(r'[^A-Za-z0-9]', '', raw_text.upper().replace('Đ', 'D'))
         return cleaned
 
     @classmethod
-    def format_vietnamese_plate(cls, cleaned_text: str, plate_type: Optional[str] = None) -> str:
+    def format_vietnamese_plate(cls, cleaned_text: str, plate_type: Optional[str] = None, text_lines=None) -> str:
         """
         Sửa lỗi dựa trên cấu trúc vị trí biển số xe Việt Nam và thêm định dạng dấu gạch/chấm chuẩn:
         - 2 ký tự đầu: Mã tỉnh (luôn là 2 chữ số, VD: 29, 30, 59, 88, 90,...)
@@ -53,6 +53,31 @@ class PlatePostprocessor:
         - Biển ô tô (1 dòng):   30A-123.45 hoặc 51F-866.88
         - Biển ô tô vuông:      30A 123.45
         """
+        cleaned_text = cls.clean_text(cleaned_text)
+        # Row evidence disambiguates 54-H4 / 5555 from 54H / 45555.
+        # Never delete a character merely to make an unsupported string pass regex.
+        if text_lines and len(text_lines) > 1:
+            lines = [cls.clean_text(line) for line in text_lines]
+            if len(lines) != 2 or "".join(lines) != cleaned_text:
+                return ""
+            prefix, serial = lines
+            if len(prefix) not in (3, 4, 5) or len(serial) not in (4, 5):
+                return ""
+            prefix = "".join(cls.CHAR_TO_DIGIT.get(c, c) for c in prefix[:2]) + cls.DIGIT_TO_CHAR.get(prefix[2], prefix[2]) + prefix[3:]
+            serial = "".join(cls.CHAR_TO_DIGIT.get(c, c) for c in serial)
+            if not re.fullmatch(r"[0-9]{2}(?:[A-Z][A-Z0-9]?|MD[0-9])", prefix) or not serial.isdigit():
+                return ""
+            suffix = serial[:3] + "." + serial[3:] if len(serial) == 5 else serial
+            head = prefix[:2] + "-" + prefix[2:] if len(prefix) >= 4 else prefix
+            return f"{head} {suffix}"
+
+        # Electric-motorcycle MD series has a five-character prefix. Restrict
+        # this case explicitly; do not accept arbitrary extra OCR characters.
+        electric = re.fullmatch(r"([0-9]{2})MD([0-9])([0-9]{5})", cleaned_text)
+        if electric:
+            province, series, serial = electric.groups()
+            return f"{province}-MD{series} {serial[:3]}.{serial[3:]}"
+
         text = list(cleaned_text)
         length = len(text)
 
@@ -65,7 +90,7 @@ class PlatePostprocessor:
                 text[i] = cls.CHAR_TO_DIGIT[text[i]]
 
         # 2. Các ký tự cuối bắt buộc phải là số (thường là 4 hoặc 5 số cuối)
-        tail_start = max(3, length - 5)
+        tail_start = 4 if length >= 8 and text[3].isalpha() else max(3, length - 5)
         for i in range(tail_start, length):
             if text[i] in cls.CHAR_TO_DIGIT:
                 text[i] = cls.CHAR_TO_DIGIT[text[i]]
@@ -103,6 +128,8 @@ class PlatePostprocessor:
 
         # Biển 1 dòng (Ô tô hình chữ nhật dài)
         if length == 8:  # VD: 30A12345 -> 30A-123.45
+            if text[2].isalpha() and text[3].isalpha():
+                return f"{raw[:4]}-{raw[4:]}"
             return f"{raw[:3]}-{raw[3:6]}.{raw[6:]}"
         elif length == 9:
             if text[2].isalpha() and text[3].isalpha():
@@ -124,6 +151,13 @@ class PlatePostprocessor:
         """
         if not plate_number:
             return False
-        clean = re.sub(r'[^A-Za-z0-9]', '', plate_number).upper()
-        pattern = r"^[0-9]{2}[A-Z]{1}[0-9A-Z]{0,2}[0-9]{4,5}$"
+        plate_number = plate_number.strip().upper().replace('Đ', 'D')
+        if re.search(r"[^A-Z0-9]", plate_number):
+            # Validate displayed groups too, rather than hiding grouping errors
+            # by stripping every separator before validation.
+            return bool(re.fullmatch(r"[0-9]{2}-?(?:[A-Z][A-Z0-9]?|MD[0-9])[ -](?:[0-9]{4}|[0-9]{3}\.[0-9]{2}|[0-9]{5})", plate_number))
+        clean = plate_number
+        # Biển VN có 2 số tỉnh, sê-ri (một chữ + số tùy chọn hoặc hai chữ),
+        # tiếp theo là 4 hoặc 5 chữ số. Chặn chuỗi thừa ký tự kiểu 88GC133343.
+        pattern = r"^[0-9]{2}(?:[A-Z][0-9]?|[A-Z]{2}|MD[0-9])[0-9]{4,5}$"
         return bool(re.match(pattern, clean))

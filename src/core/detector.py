@@ -76,18 +76,34 @@ class LicensePlateDetector:
                     "_dist": dist_to_center
                 })
 
-        # Sắp xếp ưu tiên: Độ tin cậy cao + nằm gần trung tâm ảnh
+        # Loại các box trùng nhau nhưng giữ tất cả biển trong ảnh, kể cả ảnh nhiều xe.
         detections.sort(key=lambda d: (-d["confidence"], d["_dist"]))
-        
-        # Chỉ giữ lại tối đa 2 biển số tiềm năng nhất trên 1 khung hình
-        detections = detections[:2]
+        unique_detections = []
+        for candidate in detections:
+            x1, y1, x2, y2 = candidate["bbox"]
+            candidate_area = max(0, x2 - x1) * max(0, y2 - y1)
+            duplicate = False
+            for kept in unique_detections:
+                kx1, ky1, kx2, ky2 = kept["bbox"]
+                ix1, iy1 = max(x1, kx1), max(y1, ky1)
+                ix2, iy2 = min(x2, kx2), min(y2, ky2)
+                intersection = max(0, ix2 - ix1) * max(0, iy2 - iy1)
+                kept_area = max(0, kx2 - kx1) * max(0, ky2 - ky1)
+                union = candidate_area + kept_area - intersection
+                if union and intersection / union >= 0.55:
+                    duplicate = True
+                    break
+            if not duplicate:
+                unique_detections.append(candidate)
 
-        for d in detections:
-            d.pop("_dist", None)
+        # Xử lý theo thứ tự trái sang phải để giao diện cho kết quả ổn định.
+        unique_detections.sort(key=lambda d: (d["bbox"][0], d["bbox"][1]))
+        for detection in unique_detections:
+            detection.pop("_dist", None)
 
-        return detections
+        return unique_detections
 
-    def detect(self, image: np.ndarray) -> List[Dict[str, Any]]:
+    def detect(self, image: np.ndarray, include_low_confidence: bool = False) -> List[Dict[str, Any]]:
         """
         Phát hiện biển số xe với độ chính xác cao, loại bỏ triệt để các box rác.
         """
@@ -103,7 +119,10 @@ class LicensePlateDetector:
         # Dự đoán bằng mô hình YOLO detection chính thức
         results = self.model.predict(
             source=image,
-            conf=self.conf_threshold,
+            # API candidates are checked by OCR afterwards. Keeping the weak
+            # proposals even when another plate is strong avoids losing small
+            # neighbouring plates. The offline operating threshold is unchanged.
+            conf=min(self.conf_threshold, 0.10) if include_low_confidence else self.conf_threshold,
             iou=0.45,
             imgsz=imgsz,
             verbose=False
@@ -111,11 +130,12 @@ class LicensePlateDetector:
         
         detections = self._filter_boxes(results, image, w, h, img_center_x, img_center_y)
 
-        # Nếu conf=0.30 chưa bắt được biển, thử hạ nhẹ xuống 0.20 với bộ lọc nghiêm ngặt
-        if not detections:
+        # Nếu conf=0.30 và 0.20 chưa bắt được biển, thử ngưỡng thấp hơn.
+        # Kết quả vẫn phải qua OCR và kiểm tra định dạng ở API trước khi chấp nhận.
+        if not detections and not include_low_confidence:
             results_low = self.model.predict(
                 source=image,
-                conf=0.20,
+                conf=0.10,
                 iou=0.45,
                 imgsz=imgsz,
                 verbose=False

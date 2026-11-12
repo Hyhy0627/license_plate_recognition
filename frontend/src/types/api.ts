@@ -20,6 +20,8 @@ export interface PlateDetectionResponse {
   total_detected: number;
   processing_time_ms: number;
   results: DetectionResult[];
+  warnings?: string[];
+  cloud_attempts?: number;
 }
 
 export interface DetectionHistoryItem {

@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     YOLO_MODEL_PATH: str = str(BASE_DIR / "models" / "best.pt")
     OCR_ENGINE: str = "hybrid"  # hybrid | yolo | 9router | paddleocr | easyocr
     CONFIDENCE_THRESHOLD: float = 0.5
+    INFERENCE_THREADS: int = 2
+    CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000"
+    AUTH_COOKIE_SECURE: bool = False
+    AUTH_SESSION_DAYS: int = 7
     
     # 9Router Vision API Settings
     NINEROUTER_BASE_URL: str = "http://localhost:20128/v1"

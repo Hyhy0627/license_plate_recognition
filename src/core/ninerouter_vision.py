@@ -95,6 +95,7 @@ class NineRouterVisionClient:
         system_prompt = (
             "Bạn là chuyên gia thị giác máy tính nhận dạng biển số xe Việt Nam.\n"
             "Nhiệm vụ: Đọc chính xác toàn bộ chữ cái và chữ số trên biển số xe trong ảnh.\n"
+            "Không suy đoán ký tự bị che hoặc không nhìn rõ. Nếu không đọc được đầy đủ, trả raw_text rỗng và confidence 0.\n"
             "QUY TẮC PHÂN BIỆT KÝ TỰ DỄ NHẦM LẪN:\n"
             "- Phân biệt cực kỳ cẩn thận giữa chữ 'G' và 'C':\n"
             "  + 'G': Có nét gạch ngang (thanh ngang) hướng vào trong ở phía bên phải.\n"
@@ -107,6 +108,7 @@ class NineRouterVisionClient:
             "Yêu cầu xuất kết quả theo định dạng JSON chuẩn duy nhất:\n"
             "{\n"
             '  "raw_text": "chuỗi ký tự không dấu cách (vd: 88G133343)",\n'
+            '  "text_lines": ["từng dòng ký tự đọc được, giữ nguyên thứ tự từ trên xuống"],\n'
             '  "plate_type": "one_line" hoặc "two_line",\n'
             '  "confidence": số thập phân từ 0.0 đến 1.0\n'
             "}"
@@ -138,7 +140,7 @@ class NineRouterVisionClient:
                 {"role": "user", "content": user_content},
             ],
             "temperature": 0.1,
-            "max_tokens": 120,
+            "max_tokens": 180,
         }
 
         try:
@@ -152,9 +154,9 @@ class NineRouterVisionClient:
 
             if resp.status_code != 200:
                 logger.warning(
-                    f"9Router Vision API trả về mã lỗi {resp.status_code}: {resp.text}"
+                    f"9Router Vision API trả về mã lỗi {resp.status_code}"
                 )
-                return {"raw_text": "", "plate_type": "unknown", "confidence": 0.0, "error": resp.text}
+                return {"raw_text": "", "plate_type": "unknown", "confidence": 0.0, "error": "http_error"}
 
             content = ""
             raw_body = resp.text.strip()
@@ -177,7 +179,6 @@ class NineRouterVisionClient:
                 except Exception as je:
                     content = raw_body
 
-            logger.info(f"9Router Vision Raw Content: {content}")
             return self._parse_model_output(content)
 
         except requests.exceptions.Timeout:
@@ -211,6 +212,7 @@ class NineRouterVisionClient:
         system_prompt = (
             "Bạn là chuyên gia thị giác máy tính nhận diện biển số xe Việt Nam.\n"
             "Nhiệm vụ: Hãy tìm chính xác vị trí của tấm biển số xe trong ảnh và đọc toàn bộ ký tự trên biển.\n"
+            "Không đoán hay tự điền ký tự bị che hoặc không nhìn rõ; trường hợp đó trả raw_text rỗng và confidence 0.\n"
             "QUY TẮC THOÁT SỚM (EARLY EXIT): Nếu bức ảnh là phong cảnh, động vật, tài liệu hoặc HOÀN TOÀN KHÔNG CÓ BIỂN SỐ XE, "
             "hãy trả về ngay JSON:\n"
             '{"bbox_normalized": null, "raw_text": "", "plate_type": "unknown", "confidence": 0.0}\n'
@@ -221,6 +223,7 @@ class NineRouterVisionClient:
             "{\n"
             '  "bbox_normalized": [ymin, xmin, ymax, xmax],\n'
             '  "raw_text": "chuỗi ký tự viết hoa không dấu cách (vd: 29AC88688)",\n'
+            '  "text_lines": ["từng dòng ký tự đọc được theo thứ tự trên xuống"],\n'
             '  "plate_type": "one_line" hoặc "two_line",\n'
             '  "confidence": số thập phân từ 0.0 đến 1.0\n'
             "}"
@@ -252,7 +255,7 @@ class NineRouterVisionClient:
                 {"role": "user", "content": user_content},
             ],
             "temperature": 0.1,
-            "max_tokens": 120,
+            "max_tokens": 220,
         }
 
         try:
@@ -265,8 +268,8 @@ class NineRouterVisionClient:
             )
 
             if resp.status_code != 200:
-                logger.warning(f"9Router Vision detect trả về lỗi {resp.status_code}: {resp.text}")
-                return {"raw_text": "", "plate_type": "unknown", "bbox": None, "confidence": 0.0}
+                logger.warning(f"9Router Vision detect trả về lỗi {resp.status_code}")
+                return {"raw_text": "", "plate_type": "unknown", "bbox": None, "confidence": 0.0, "error": "http_error"}
 
             content = ""
             raw_body = resp.text.strip()
@@ -287,7 +290,6 @@ class NineRouterVisionClient:
                 except Exception:
                     content = raw_body
 
-            logger.info(f"9Router Vision detect response: {content}")
             parsed_res = self._parse_model_output(content)
 
             # Trích xuất bounding box chuẩn hóa
@@ -313,8 +315,9 @@ class NineRouterVisionClient:
             return parsed_res
 
         except Exception as e:
-            logger.error(f"Lỗi 9Router Vision detect_and_recognize_plate: {e}")
-            return {"raw_text": "", "plate_type": "unknown", "bbox": None, "confidence": 0.0}
+            logger.error(f"Lỗi 9Router Vision detect_and_recognize_plate: {type(e).__name__}")
+            return {"raw_text": "", "plate_type": "unknown", "bbox": None, "confidence": 0.0,
+                    "error": "timeout" if isinstance(e, requests.exceptions.Timeout) else "connection_error"}
 
     def _parse_model_output(self, text: str) -> Dict[str, Any]:
         """Xử lý và parse JSON từ chuỗi văn bản của LLM (loại bỏ markdown block nếu có)."""
@@ -332,11 +335,15 @@ class NineRouterVisionClient:
             plate_type = parsed.get("plate_type", "one_line")
             if plate_type not in ["one_line", "two_line"]:
                 plate_type = "one_line"
-            conf = float(parsed.get("confidence", 0.95))
+            conf = max(0.0, min(1.0, float(parsed.get("confidence", 0.0))))
+            lines = parsed.get("text_lines")
+            if not isinstance(lines, list) or not all(isinstance(line, str) for line in lines):
+                lines = None
             return {
                 "raw_text": raw_text,
                 "plate_type": plate_type,
                 "confidence": conf,
+                "text_lines": lines,
             }
         except Exception:
             # Fallback nếu model trả văn bản thuần không phải JSON
@@ -345,6 +352,6 @@ class NineRouterVisionClient:
             return {
                 "raw_text": raw_text,
                 "plate_type": "two_line" if len(raw_text) > 8 else "one_line",
-                "confidence": 0.85,
+                "confidence": 0.0,
             }
 
