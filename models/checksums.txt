@@ -1,0 +1,9 @@
+# SHA256 of local model files; run checks from the repository root.
+# Weights remain untracked. Presence in this inventory does not imply runtime use.
+bde8d2007b7517f8237b77459f11a889513d158d7252355576c2b35e6e6a316a  models/best.pt
+bdb6ffac69a9fa2f852bf118cf51488aef1c4d79f907df6e654bd535a6c0053b  models/best_toy.pt
+e2272681d9d67a04e2dff396b6e95077bc19001f8f6d3593c307b9852e1c29e8  models/easyocr/english_g2.pth
+67c1ad8dbe4ad1b138d64b9e31e495e07abfc9d44e7787aed1845dc580473c77  models/LP_ocr.pt
+99f0ac35f0dd3cf8231c8972d8ee6bd66672bde368c6481f070b164242f128fd  models/video/cct_s_v1_vn.onnx
+83a6d061c2bcc83d2660b58b6353ded064b11282205000850d5692eefdb690cd  models/video/DetectLisence_YOLO11.pt
+f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36  models/yolov8n.pt

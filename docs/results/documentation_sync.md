@@ -24,12 +24,12 @@ Ngày thực hiện: **19/11/2026**, Asia/Bangkok. Phạm vi là bộ hướng d
 | [benchmark/README.md](../../benchmark/README.md) | Runner chức năng và ranh giới phép đo |
 | [benchmark/ACCURACY.md](../../benchmark/ACCURACY.md) | Benchmark ảnh local có nhãn |
 | [models/weights_readme.txt](../../models/weights_readme.txt) | Trọng số bắt buộc/tùy chọn và cách cài |
-| [data/README.md](../../data/README.md) | Fixture, dữ liệu runtime và giới hạn ignore hiện tại |
+| [data/README.md](../data.md) | Fixture, dữ liệu runtime và giới hạn ignore hiện tại |
 | [notebooks/README.md](../../notebooks/README.md) | Điều kiện thực thi và bằng chứng lịch sử |
 | [docs/README.md](../README.md) | Mục lục chuyên đề và trạng thái báo cáo |
 | [docs/video_onnx.md](../video_onnx.md) | Luồng video, cấu hình, giới hạn và đo hiệu năng |
 | [docs/cloud_ocr.md](../cloud_ocr.md) | Điều kiện remote và dữ liệu gửi qua gateway |
-| [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md) | Ghi nhận nguồn mã/model đã có; giữ nội dung nguồn |
+| [THIRD_PARTY_NOTICES.md](../video_onnx.md#nguon-ma-va-model) | Ghi nhận nguồn mã/model đã có; giữ nội dung nguồn |
 | Tài liệu này | Kết quả và giới hạn kiểm tra giai đoạn 1 |
 
 Các tài liệu chuyên đề không duy trì thêm bảng endpoint/ORM hoặc cây thư mục đầy đủ. Code là nguồn đối chiếu khi cập nhật; các snapshot kiểm toán/báo cáo lịch sử có thời điểm riêng.
@@ -58,3 +58,5 @@ Pytest chạy trong tiến trình con với `PYTHONUTF8=1`, `PYTEST_DISABLE_PLUG
 - Báo cáo Word/PDF và biểu đồ cũ cần được xử lý như snapshot; muốn phát hành lại phải cập nhật nội dung và kiểm tra layout riêng.
 - Model phương tiện vẫn ở gốc; fixture vẫn trong data/test_cases; ignore file trực tiếp trong data/outputs chưa bao phủ hết; .env.example còn khác default code. Đây là các thay đổi cấu hình/bố trí được để lại cho giai đoạn sau.
 - Nhiều thay đổi code/cấu hình từ trước vẫn chưa commit; commit giai đoạn này chỉ gom các file tài liệu đã kiểm tra, không nhận chúng là code đã commit hoặc đã được nghiệm thu.
+
+Ghi chú giai đoạn 2: hướng dẫn dữ liệu đã chuyển sang [docs/data.md](../data.md). Các đường dẫn mô tả ở trên là snapshot giai đoạn 1; trạng thái mới xem [repository_cleanup.md](repository_cleanup.md).

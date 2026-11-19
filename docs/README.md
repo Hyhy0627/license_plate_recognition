@@ -6,8 +6,11 @@
 |---|---|
 | [cloud_ocr.md](cloud_ocr.md) | Điều kiện gọi NineRouter, dữ liệu gửi đi và cấu hình local |
 | [video_onnx.md](video_onnx.md) | Luồng video, mode/engine, giới hạn xử lý và cách đo |
+| [data.md](data.md) | Dữ liệu runtime và fixture được version hóa |
+| [tools/README.md](tools/README.md) | Phạm vi công cụ tài liệu và script đã ngừng dùng |
+| [Kết quả giai đoạn 2](results/repository_cleanup.md) | Các đường dẫn đã chuyển và kiểm tra tính toàn vẹn |
 | [Kiểm thử](../tests/TESTING.md) | Test phần mềm, benchmark, notebook |
-| [Nguồn mã và model](../THIRD_PARTY_NOTICES.md) | Phần kế thừa và các điều chỉnh tích hợp |
+| [Nguồn mã và model](video_onnx.md#nguon-ma-va-model) | Phần kế thừa và các điều chỉnh tích hợp |
 | [Kết quả giai đoạn 1](results/documentation_sync.md) | Lệnh/kết quả kiểm tra của đợt đồng bộ tài liệu |
 | [Kiểm toán giai đoạn 0](../AUDIT.md) | Snapshot sai lệch trước đồng bộ; không phải hướng dẫn cấu hình mới |
 

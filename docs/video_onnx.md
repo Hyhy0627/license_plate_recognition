@@ -4,9 +4,9 @@ API phân tích video ngắn, trả metadata theo vết và phục vụ lại fi
 
 ## Mã xử lý và model
 
-`src/core/plate_reader.py` chứa lớp đọc biển được tách khỏi giao diện Streamlit của nguồn kế thừa. Backend dùng phần OCR qua `VideoPlateOCR` trong `src/core/video_models.py`; việc theo vết phương tiện, ghép biển và tổng hợp kết quả của web nằm trong `src/core/video_tracker.py`. Xem [nguồn mã/model](../THIRD_PARTY_NOTICES.md).
+`src/core/plate_reader.py` chứa lớp đọc biển được tách khỏi giao diện Streamlit của nguồn kế thừa. Backend dùng phần OCR qua `VideoPlateOCR` trong `src/core/video_models.py`; việc theo vết phương tiện, ghép biển và tổng hợp kết quả của web nằm trong `src/core/video_tracker.py`. Xem [nguồn mã/model](#nguon-ma-va-model).
 
-Bộ model video mặc định gồm `DetectLisence_YOLO11.pt` và `cct_s_v1_vn.onnx`, cùng cấu hình OCR. `yolov8n.pt` ở thư mục gốc là model phương tiện dùng để theo vết. Vị trí và lệnh cài đầy đủ nằm tại [hướng dẫn trọng số](../models/weights_readme.txt).
+Bộ model video mặc định gồm `DetectLisence_YOLO11.pt` và `cct_s_v1_vn.onnx`, cùng cấu hình OCR. `models/yolov8n.pt` trong thư mục model là model phương tiện dùng để theo vết. Vị trí và lệnh cài đầy đủ nằm tại [hướng dẫn trọng số](../models/weights_readme.txt).
 
 ```powershell
 .\venv\Scripts\python.exe scripts/setup_video_models.py
@@ -50,10 +50,32 @@ Khởi động lại backend sau khi đổi cấu hình. Điều kiện remote v
 Chạy từ thư mục gốc với video thực sự có trên máy:
 
 ```powershell
-.\venv\Scripts\python.exe benchmark/benchmark_video.py "duong-dan-video.mp4" --engine onnx --mode fast --output data/benchmarks/onnx.json
-.\venv\Scripts\python.exe benchmark/benchmark_video.py "duong-dan-video.mp4" --engine legacy --mode combined --output data/benchmarks/legacy.json
+.\venv\Scripts\python.exe scripts/benchmark_video.py "duong-dan-video.mp4" --engine onnx --mode fast --output data/benchmarks/onnx.json
+.\venv\Scripts\python.exe scripts/benchmark_video.py "duong-dan-video.mp4" --engine legacy --mode combined --output data/benchmarks/legacy.json
 ```
 
 Cả hai lệnh đều tắt OCR từ xa. JSON ghi thời gian nạp detector/OCR biển, thời gian phân tích và tổng thời gian. Việc tạo model phương tiện nằm trong `process_video`, nên thuộc thời gian phân tích của CLI. API bắt đầu tính trước khi lấy engine, không bao gồm upload/thời gian xếp hàng. Hai phép đo khác mode không tách riêng đóng góp của model; cần cùng mode/dữ liệu để so sánh có kiểm soát.
 
 Trong đợt đồng bộ tài liệu, hiệu năng và độ chính xác video **chưa đo**. Các số thời gian/tăng tốc từng ghi tại đây đã được bỏ khỏi hướng dẫn hiện hành vì file bằng chứng không còn ở workspace; xem snapshot [AUDIT.md](../AUDIT.md). Chưa có kết quả tracking có nhãn MOTA/IDF1 hoặc ablation tái lập kèm tài liệu này.
+
+<a id="nguon-ma-va-model"></a>
+
+## Nguồn mã và model
+
+## Lõi đọc biển số
+
+- Tác giả/repository: [ddkhoa2605/LicensePlateDetection](https://github.com/ddkhoa2605/LicensePlateDetection).
+- Phiên bản: `f1c732e2270becc44df1de6529372f63ef251076`.
+- File gốc: `appStreamlit.py`, lớp `SimplePlateDetector`.
+- File tích hợp: `src/core/plate_reader.py`, lớp `PlateReader`.
+- Các thuật toán kế thừa: tiền xử lý crop, crop có padding, bỏ phiếu ký tự theo confidence, quản lý vòng đời track và xử lý frame.
+- Điều chỉnh của đồ án: bỏ phụ thuộc Streamlit; nạp model tùy chọn; cập nhật API Fast Plate OCR 1.1; chuyển BGR sang RGB; loại padding trước khi tính confidence; cho phép tắt tiền xử lý trong adapter video để giữ luồng đang chạy.
+- Backend dùng OCR từ lớp này qua `VideoPlateOCR`; theo vết phương tiện và schema trả về cho web vẫn nằm trong `src/core/video_tracker.py`.
+
+Thông tin nguồn được giữ để phân biệt phần kế thừa với phần nhóm tự triển khai. Repository gốc không có file LICENSE riêng tại phiên bản được tích hợp; tài liệu này không cấp thêm quyền sử dụng.
+
+### Trọng số và cấu hình OCR
+
+`DetectLisence_YOLO11.pt`, `cct_s_v1_vn.onnx` và cấu hình `cct_s_v1_vn_plate_config.yaml` lấy từ cùng phiên bản trên. Cấu hình được lưu tại `src/core/video_ocr.yaml`; trọng số được cài riêng bằng `scripts/setup_video_models.py` với SHA256 cố định. Không coi các trọng số này là model do nhóm tự huấn luyện.
+
+Ultralytics, Fast Plate OCR và ONNX Runtime vẫn là các thư viện cài qua `requirements.txt`, không phải mã do nhóm tự phát triển.

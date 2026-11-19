@@ -26,8 +26,8 @@ Payload nhận diện không chủ đích chứa mật khẩu người dùng, co
 
 Các biến nằm trong `src/config.py` và [.env.example](../.env.example): `OCR_ENGINE`, `NINEROUTER_BASE_URL`, `NINEROUTER_API_KEY`, `NINEROUTER_MODEL`, `NINEROUTER_TIMEOUT`, `VIDEO_NINEROUTER_TIMEOUT`. Tên model là chuỗi cấu hình; cần đối chiếu model gateway thực tế cung cấp, không coi tên ví dụ là model đã xác minh.
 
-Default code chọn `OCR_ENGINE=hybrid`; `.env.example` hiện chọn `9router`. Khi chỉ muốn nhận diện local qua API ảnh, đặt `OCR_ENGINE=yolo` trong `.env` rồi khởi động lại backend. Mode fast của API video đã tắt remote. Không thay cấu hình tài khoản hoặc API key thật chỉ để chạy test.
+Default code và `.env.example` đều chọn `OCR_ENGINE=hybrid`. Khi chỉ muốn nhận diện local qua API ảnh, đặt `OCR_ENGINE=yolo` trong `.env` rồi khởi động lại backend. Mode fast của API video đã tắt remote. Không thay cấu hình tài khoản hoặc API key thật chỉ để chạy test.
 
-Benchmark ảnh local và `benchmark/benchmark_video.py` không gửi ảnh qua NineRouter. Khi đánh giá hybrid, dùng manifest riêng, ghi rõ gateway/model/thời gian chờ và tách kết quả khỏi local. Không dùng kết quả hybrid để kết luận hệ thống offline đạt cùng độ chính xác.
+Benchmark ảnh local và `scripts/benchmark_video.py` không gửi ảnh qua NineRouter. Khi đánh giá hybrid, dùng manifest riêng, ghi rõ gateway/model/thời gian chờ và tách kết quả khỏi local. Không dùng kết quả hybrid để kết luận hệ thống offline đạt cùng độ chính xác.
 
 Độ trễ, chi phí và mức đóng góp độ chính xác của remote trong đợt đồng bộ tài liệu: **chưa đo**.

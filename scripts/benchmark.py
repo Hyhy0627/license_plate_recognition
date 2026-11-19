@@ -1,4 +1,4 @@
-"""Read-only evaluation of existing labeled images. See tool/BENCHMARK.md.
+"""Read-only evaluation of existing labeled images. See benchmark/ACCURACY.md.
 
 Default scope: offline local detector + local YOLO OCR + postprocessor.
 No cloud calls, no API/database writes, no regenerated datasets or notebooks.
@@ -243,7 +243,7 @@ def save_outputs(output, manifest, records, summary, categories, plots):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dataset", type=Path, default=ROOT / "data/test_cases")
+    parser.add_argument("--dataset", type=Path, default=ROOT / "tests/fixtures/test_cases")
     parser.add_argument("--ground-truth", type=Path)
     parser.add_argument("--dataset-kind", choices=["synthetic", "real", "unspecified"], default="unspecified")
     parser.add_argument("--model", type=Path, default=ROOT / "models/best.pt")

@@ -23,8 +23,8 @@ Thư viện notebook được khai báo trong `requirements.txt`. Nếu môi tr�
 Kiểm tra định dạng hoặc chạy cả ba notebook bằng Python của dự án:
 
 ```powershell
-.\venv\Scripts\python.exe notebooks/run_notebooks.py
-.\venv\Scripts\python.exe notebooks/run_notebooks.py --execute
+.\venv\Scripts\python.exe scripts/run_notebooks.py
+.\venv\Scripts\python.exe scripts/run_notebooks.py --execute
 ```
 
 `run_notebooks.py` dùng để kiểm tra và chạy tự động. Nó không sinh KPI ghi sẵn hoặc ghi đè notebook nguồn.
@@ -33,7 +33,7 @@ Nguồn `.ipynb` giữ gọn, không lưu output; mở bản trong thư mục k�
 
 ## Dữ liệu và bằng chứng cần có
 
-- Notebook 01/02: ảnh và `data/test_cases/ground_truth.json`. Đây là dữ liệu tổng hợp, không phải ảnh giao thông thật.
+- Notebook 01/02: ảnh và `tests/fixtures/test_cases/ground_truth.json`. Đây là dữ liệu tổng hợp, không phải ảnh giao thông thật.
 - Notebook 02: `models/LP_ocr.pt`; không tự tải model, không gọi 9Router. Thiếu ảnh/model sẽ báo lỗi thay vì ghi số liệu thay thế.
 - Notebook 01 dùng thêm `data/recognition_regression/hardening_20261105/all_cases.json` nếu có; từng ảnh được kiểm tra SHA256. Bộ hồi quy có ảnh trùng với bộ tổng hợp và ba khung hình cùng xe.
 - Notebook 03: ô cấu hình trỏ rõ tới các lượt benchmark/hồi quy đã lưu ngày 05/11/2026. Đổi các đường dẫn này khi muốn phân tích lượt khác. Bằng chứng trong `data/benchmarks` và `data/recognition_regression` không được Git theo dõi; bản clone mới cần dữ liệu này để chạy.

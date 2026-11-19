@@ -8,8 +8,8 @@ import cv2
 import numpy as np
 import pandas as pd
 
-from tool.check_regression import signature
-from tool.benchmark import load_annotations, sha256, summarize
+from scripts.check_regression import signature
+from scripts.benchmark import load_annotations, sha256, summarize
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,7 +43,7 @@ def checked_crop(image, bbox):
 
 
 def load_synthetic_samples():
-    dataset = ROOT / "data/test_cases"
+    dataset = ROOT / "tests/fixtures/test_cases"
     samples, _ = load_annotations(dataset, dataset / "ground_truth.json")
     for sample in samples:
         sample["kind"] = "synthetic"

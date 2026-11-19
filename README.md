@@ -13,9 +13,9 @@ npm --prefix frontend ci
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-Để xử lý ảnh cục bộ, đặt `OCR_ENGINE=yolo` trong `.env`. Default trong code là `hybrid`, còn `.env.example` hiện chọn `9router`; giá trị trong môi trường/`.env` quyết định chế độ khi chạy. Xem [cách hoạt động của OCR từ xa](docs/cloud_ocr.md) trước khi chọn chế độ có NineRouter.
+Để xử lý ảnh cục bộ, đặt `OCR_ENGINE=yolo` trong `.env`. Default trong code và `.env.example` đều là `hybrid`; giá trị trong môi trường/`.env` quyết định chế độ khi chạy. Xem [cách hoạt động của OCR từ xa](docs/cloud_ocr.md) trước khi chọn chế độ có NineRouter.
 
-Chuẩn bị `models/best.pt`, `models/LP_ocr.pt` và `yolov8n.pt` theo [hướng dẫn trọng số](models/weights_readme.txt). Hai model ảnh là bắt buộc khi backend khởi động; model phương tiện ở thư mục gốc được dùng khi xử lý video. Trọng số không được đưa lên Git.
+Chuẩn bị `models/best.pt`, `models/LP_ocr.pt` và `models/yolov8n.pt` theo [hướng dẫn trọng số](models/weights_readme.txt). Hai model ảnh là bắt buộc khi backend khởi động; model phương tiện trong `models/` được dùng khi xử lý video. Trọng số không được đưa lên Git.
 
 Cài bộ model bổ trợ cho video mặc định:
 
@@ -55,13 +55,14 @@ Backend có [Swagger](http://localhost:8000/docs) và [ReDoc](http://localhost:8
 | Cần làm | Tài liệu |
 |---|---|
 | Hiểu module, luồng xử lý, API và database | [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) |
+| Tra script kỹ thuật | [scripts/README.md](scripts/README.md) |
 | Cài model | [models/weights_readme.txt](models/weights_readme.txt) |
 | Hiểu dữ liệu gửi qua NineRouter | [docs/cloud_ocr.md](docs/cloud_ocr.md) |
 | Cấu hình và đánh giá video | [docs/video_onnx.md](docs/video_onnx.md) |
 | Chạy test và kiểm tra frontend | [tests/TESTING.md](tests/TESTING.md) |
 | Đo thao tác ứng dụng hoặc độ chính xác ảnh | [benchmark/README.md](benchmark/README.md), [benchmark/ACCURACY.md](benchmark/ACCURACY.md) |
 | Phân tích bằng notebook | [notebooks/README.md](notebooks/README.md) |
-| Phân biệt fixture và dữ liệu runtime | [data/README.md](data/README.md) |
-| Tra nguồn mã/model và trạng thái báo cáo | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), [docs/README.md](docs/README.md) |
+| Phân biệt fixture và dữ liệu runtime | [docs/data.md](docs/data.md) |
+| Tra nguồn mã/model và trạng thái báo cáo | [Nguồn mã/model](docs/video_onnx.md#nguon-ma-va-model), [docs/README.md](docs/README.md) |
 
-Tốc độ và độ chính xác AI hiện tại **chưa đo trong đợt đồng bộ tài liệu**. Bộ ảnh kèm repository là ảnh tổng hợp; số test phần mềm đạt không thể thay cho đánh giá trên giao thông thực tế. Xem [kết quả kiểm tra giai đoạn 1](docs/results/documentation_sync.md) để biết phạm vi đã kiểm chứng.
+Tốc độ và độ chính xác AI hiện tại **chưa đo trong đợt đồng bộ tài liệu**. Bộ ảnh kèm repository là ảnh tổng hợp; số test phần mềm đạt không thể thay cho đánh giá trên giao thông thực tế. Xem [kết quả kiểm tra giai đoạn 2](docs/results/repository_cleanup.md) để biết phạm vi đã kiểm chứng.

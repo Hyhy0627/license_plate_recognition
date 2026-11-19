@@ -9,7 +9,7 @@ trình duyệt Edge headless, kiểm tra frontend và phép đo model thật tù
 .\venv\Scripts\python.exe -m pip install -r requirements.txt
 npm --prefix frontend ci
 npm --prefix benchmark ci
-.\venv\Scripts\python.exe benchmark/benchmark_all.py
+.\venv\Scripts\python.exe scripts/benchmark_all.py
 ```
 
 Runner mặc định chọn Edge; trình duyệt và dependency benchmark cần được chuẩn bị riêng trên máy chạy. Để dùng Chromium của Playwright:
@@ -24,13 +24,13 @@ cd ..
 Chỉ chạy test Python, TypeScript và ESLint (bỏ trình duyệt):
 
 ```powershell
-.\venv\Scripts\python.exe benchmark/benchmark_all.py --skip-ui
+.\venv\Scripts\python.exe scripts/benchmark_all.py --skip-ui
 ```
 
 Thêm phép đo model thật (cần trọng số hiện tại và `scripts/setup_video_models.py`):
 
 ```powershell
-.\venv\Scripts\python.exe benchmark/benchmark_all.py --real --image "data/test_cases/blurred/blur_01.jpg" --video "duong-dan-video.mp4" --iterations 3
+.\venv\Scripts\python.exe scripts/benchmark_all.py --real --image "tests/fixtures/test_cases/blurred/blur_01.jpg" --video "duong-dan-video.mp4" --iterations 3
 ```
 
 `--video` tùy chọn. Không truyền `--image` sẽ dùng ảnh tổng hợp `blur_01.jpg`;
@@ -103,7 +103,7 @@ chưa hỗ trợ. Bộ test không biến một tính năng chưa có thành k�
   năng có thể vẫn đạt. Xem attachment để xử lý lỗi hydration hoặc lỗi runtime.
 - Đây không phải kiểm thử tải đồng thời lớn, pentest hay kiểm tra mọi browser.
   Edge desktop và viewport mobile là phạm vi chạy mặc định.
-- Độ chính xác AI cần nhãn đối chứng. Dùng `benchmark/benchmark.py` với bộ có nhãn;
+- Độ chính xác AI cần nhãn đối chứng. Dùng `scripts/benchmark.py` với bộ có nhãn;
   không suy ra accuracy từ số test đạt hoặc số biển model trả về.
 
 ## Cách ly dữ liệu

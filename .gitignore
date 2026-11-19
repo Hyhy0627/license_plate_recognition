@@ -26,19 +26,8 @@ docs/QA_TESTER.md
 models/*.pt
 !models/weights_readme.txt
 
-# Dataset & Output caches
-data/raw/*
-data/outputs/cropped_plates/*
-data/outputs/final_results/*
-data/auth_verification/
-data/benchmarks/
-data/notebook_runs/
-data/recognition_regression/
-# Browser test inputs and evidence stay local.
-/data/test_real_web/
-!data/raw/.gitkeep
-!data/outputs/cropped_plates/.gitkeep
-!data/outputs/final_results/.gitkeep
+# Runtime data stays local; versioned test inputs live in tests/fixtures/.
+/data/
 runs/
 wandb/
 
@@ -80,3 +69,15 @@ test_system.py
 
 # Local handoff copies; team members commit the original relative paths instead.
 /handoff_unpushed/
+
+# Upstream video recognition repository and downloaded model configuration
+/external/
+/models/video/
+/frontend/.next-benchmark/
+/benchmark/test-results/
+/benchmark/playwright-report/
+
+# Local caches and generated repository inventories
+.pytest_cache/
+/project_structure.json
+/.codex-worktrees/

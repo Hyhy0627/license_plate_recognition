@@ -5,22 +5,22 @@
 Từ thư mục gốc dự án, dùng môi trường đã có thư viện AI:
 
 ```powershell
-.\venv\Scripts\python.exe benchmark/benchmark.py --dataset-kind synthetic
+.\venv\Scripts\python.exe scripts/benchmark.py --dataset-kind synthetic
 ```
 
-Lệnh này đọc bộ ảnh hiện có tại `data/test_cases` và nhãn `ground_truth.json`.
+Lệnh này đọc bộ ảnh hiện có tại `tests/fixtures/test_cases` và nhãn `ground_truth.json`.
 Bộ 40 ảnh hiện tại là ảnh tổng hợp; kết quả chỉ mô tả bộ ảnh đó, không đại diện toàn bộ ảnh giao thông thực tế.
 
 Chạy nhanh để kiểm tra cài đặt:
 
 ```powershell
-.\venv\Scripts\python.exe benchmark/benchmark.py --dataset-kind synthetic --limit 2 --no-plots
+.\venv\Scripts\python.exe scripts/benchmark.py --dataset-kind synthetic --limit 2 --no-plots
 ```
 
 Chạy với bộ ảnh thực đã gán nhãn độc lập:
 
 ```powershell
-.\venv\Scripts\python.exe benchmark/benchmark.py --dataset data/test_real --dataset-kind real
+.\venv\Scripts\python.exe scripts/benchmark.py --dataset data/test_real --dataset-kind real
 ```
 
 Không cần Internet hoặc 9Router. Benchmark cố định engine YOLO cục bộ và thiết bị CPU; không dùng `OCR_ENGINE=hybrid` từ `.env` để gửi ảnh lên cloud.

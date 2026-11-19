@@ -1,6 +1,6 @@
 # Kiến trúc và cấu trúc dự án
 
-Cập nhật theo working tree ngày 19/11/2026. Tài liệu này mô tả module, API và dữ liệu; [README](README.md) giữ hướng dẫn cài đặt/khởi động. Các thay đổi bố trí thư mục được đề xuất trong kiểm toán chưa được coi là đã thực hiện.
+Cập nhật theo working tree ngày 19/11/2026. Tài liệu này mô tả module, API và dữ liệu; [README](README.md) giữ hướng dẫn cài đặt/khởi động. Bố trí dưới đây đã được cập nhật ở giai đoạn 2; các snapshot kiểm toán trước đó giữ nội dung lịch sử.
 
 ## Kiến trúc triển khai
 
@@ -57,27 +57,32 @@ frontend/
   src/components/           Form, phiên đăng nhập, điều hướng, annotation video
   src/lib/                  HTTP fetch và thông tin biển Việt Nam
   src/types/                Kiểu dữ liệu API và video
-scripts/                    Cài model video và EasyOCR bổ trợ
-benchmark/                  Runner kiểm thử, đo ảnh/video và hồi quy
-notebooks/                  Phân tích cùng runner và module hỗ trợ
+scripts/                    Cài model, benchmark, hồi quy và runner notebook
+benchmark/                  Bộ Playwright và tài liệu đánh giá
+notebooks/                  Notebook phân tích và module hỗ trợ
 models/                     Hướng dẫn và trọng số cục bộ
   video/                    Trọng số/cấu hình video được cài riêng
-yolov8n.pt                  Trọng số phương tiện hiện còn ở thư mục gốc
-data/                       Fixture ảnh tổng hợp và dữ liệu runtime cục bộ
+  yolov8n.pt                Trọng số phương tiện, giữ cục bộ
+  checksums.txt             SHA256 các trọng số hiện có
+data/                       Chỉ dữ liệu runtime cục bộ, toàn bộ bị ignore
 tests/                      Test tài khoản, xử lý ảnh/video, metric và notebook
+  fixtures/test_cases/      Ảnh tổng hợp có nhãn được giữ trong Git
 docs/                       Tài liệu chuyên đề, trạng thái báo cáo và kết quả kiểm tra
+  data.md                   Chính sách dữ liệu runtime và fixture
+  tools/                    Phạm vi công cụ tài liệu, tách khỏi script kỹ thuật
+pytest.ini                  Giới hạn test discovery vào tests/
 Dockerfile                  Build backend
 docker-compose.yml          Cấu hình backend/frontend và volume cục bộ
 ```
 
-`handoff_unpushed/`, `external/` và `.local_archive/` là bản sao/tài liệu cục bộ được ignore; không thuộc runtime của ứng dụng. `tool/` không còn tồn tại. Không có pipeline `training/` trong cấu trúc hiện tại. Hướng dẫn nguồn model nằm tại [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+`handoff_unpushed/`, `external/` và `.local_archive/` là bản sao/tài liệu cục bộ được ignore; không thuộc runtime của ứng dụng. `tool/` không còn tồn tại. Không có pipeline `training/` trong cấu trúc hiện tại. Hướng dẫn nguồn model nằm tại [tài liệu video](docs/video_onnx.md#nguon-ma-va-model).
 
 ## Hai luồng nhận diện
 
 | Luồng | Thành phần chính | Nhánh bổ trợ |
 |---|---|---|
 | Ảnh qua `/api/license-plates/detect` | Detector `models/best.pt`, OCR ký tự `models/LP_ocr.pt`, chuẩn hóa biển Việt Nam | Vùng ứng viên hình học, OCR dòng EasyOCR; NineRouter nếu cấu hình cho phép và local chưa có biển hợp lệ |
-| Video qua API, mode `fast` | `yolov8n.pt` + ByteTrack theo vết phương tiện; `DetectLisence_YOLO11.pt` phát hiện biển; CCT ONNX đọc ký tự | Retry crop/đọc theo code tracker; không gọi OCR từ xa qua API ở mode này |
+| Video qua API, mode `fast` | `models/yolov8n.pt` + ByteTrack theo vết phương tiện; `DetectLisence_YOLO11.pt` phát hiện biển; CCT ONNX đọc ký tự | Retry crop/đọc theo code tracker; không gọi OCR từ xa qua API ở mode này |
 | Video qua API, mode `detailed`/`combined` | Dùng detector/OCR ảnh qua factory; `combined` chạy hai lượt fast/detailed rồi gộp | Có thể dùng NineRouter theo cấu hình và điều kiện tracker |
 
 Luồng video mặc định có `VIDEO_ENGINE=onnx`; `legacy` chọn bộ detector/OCR ảnh cho mode fast. Tên mode và engine là hai lựa chọn khác nhau. Chi tiết nạp model/cấu hình, lấy mẫu và giới hạn đầu vào nằm trong [tài liệu video](docs/video_onnx.md).
@@ -128,4 +133,4 @@ SQLite mặc định ở `data/alpr.db`; `DATABASE_URL` có thể thay đổi. `
 
 Tập ảnh kèm repository hiện có 40 ảnh tổng hợp; không đại diện chất lượng trên giao thông thực tế. Các file biểu đồ có sẵn và số lượt đọc đúng định dạng không tự chứng minh độ chính xác. Chưa có số đo hiện tại về tải đồng thời lớn, MOTA/IDF1, ablation hoặc vận hành production.
 
-Hướng dẫn đo và nguồn kết quả: [tests/TESTING.md](tests/TESTING.md), [benchmark/ACCURACY.md](benchmark/ACCURACY.md), [kết quả kiểm tra tài liệu](docs/results/documentation_sync.md). [AUDIT.md](AUDIT.md) giữ nguyên snapshot trước đồng bộ để tra lại các sai lệch đã phát hiện.
+Hướng dẫn đo và nguồn kết quả: [tests/TESTING.md](tests/TESTING.md), [benchmark/ACCURACY.md](benchmark/ACCURACY.md), [kết quả dọn repository](docs/results/repository_cleanup.md). [AUDIT.md](AUDIT.md) giữ nguyên snapshot trước đồng bộ để tra lại các sai lệch đã phát hiện.

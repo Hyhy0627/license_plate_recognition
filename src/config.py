@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     
     # AI Paths & OCR
     YOLO_MODEL_PATH: str = str(BASE_DIR / "models" / "best.pt")
+    VEHICLE_MODEL_PATH: str = str(BASE_DIR / "models" / "yolov8n.pt")
+    VIDEO_ENGINE: str = "onnx"  # onnx | legacy
+    VIDEO_PLATE_MODEL_PATH: str = str(BASE_DIR / "models/video/DetectLisence_YOLO11.pt")
+    VIDEO_OCR_MODEL_PATH: str = str(BASE_DIR / "models/video/cct_s_v1_vn.onnx")
+    VIDEO_OCR_CONFIG_PATH: str = str(BASE_DIR / "models/video/cct_s_v1_vn_plate_config.yaml")
+    VIDEO_OCR_MIN_CONFIDENCE: float = 0.7
     OCR_ENGINE: str = "hybrid"  # hybrid | yolo | 9router | paddleocr | easyocr
     CONFIDENCE_THRESHOLD: float = 0.5
     INFERENCE_THREADS: int = 2
@@ -23,9 +29,10 @@ class Settings(BaseSettings):
     
     # 9Router Vision API Settings
     NINEROUTER_BASE_URL: str = "http://localhost:20128/v1"
-    NINEROUTER_API_KEY: str = "sk-61f55deb9d48b9e9-nh78ky-98700cc2"
+    NINEROUTER_API_KEY: str = ""
     NINEROUTER_MODEL: str = "ag/gemini-3.8-flash"
     NINEROUTER_TIMEOUT: float = 6.0
+    VIDEO_NINEROUTER_TIMEOUT: float = 10.0
     
     # Storage
     OUTPUT_DIR: str = str(BASE_DIR / "data" / "outputs")
