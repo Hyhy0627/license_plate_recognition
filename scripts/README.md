@@ -5,6 +5,7 @@ Chạy từ thư mục gốc repository bằng Python trong `venv`. Các script 
 | Script | Mục đích | Hướng dẫn |
 |---|---|---|
 | `setup_video_models.py` | Cài và kiểm tra trọng số biển video | [Model](../models/weights_readme.txt) |
+| `seed_user.py` | Tạo một tài khoản khi được gọi chủ động, đọc biến môi trường và giữ nguyên tài khoản đã có | [Tài khoản/secret](../docs/security.md) |
 | `setup_ocr.py` | Cài EasyOCR dòng tùy chọn | [Model](../models/weights_readme.txt) |
 | `benchmark.py` | Đánh giá ảnh có nhãn, local | [Độ chính xác](../benchmark/ACCURACY.md) |
 | `benchmark_video.py` | Đo một video với engine/mode được chỉ định | [Video](../docs/video_onnx.md) |

@@ -49,7 +49,8 @@ src/
   db/
     session.py              SQLAlchemy engine/session
     models.py               ORM tài khoản, phiên, thử xác thực và lịch sử ảnh
-    migrations.py           Tạo schema, bổ sung owner_id và index
+    migrations.py           Chỉ tạo schema, bổ sung owner_id và index
+    seed.py                 Seed tài khoản trong transaction khi được gọi chủ động
   evaluation/metrics.py     Metric detection, nội dung biển và thời gian
   utils/                    Log và vẽ annotation
 frontend/
@@ -118,7 +119,7 @@ Lịch sử và tìm kiếm hỗ trợ `page`, `page_size`; tìm kiếm nhận q
 
 `src/api/auth.py` băm mật khẩu bằng **scrypt** với salt ngẫu nhiên. Đăng nhập tạo token opaque ngẫu nhiên; trình duyệt giữ cookie `platesight_session`, database lưu SHA256 của token và thời điểm hết hạn. Cookie có HttpOnly, SameSite=Lax; Secure bật theo cấu hình hoặc môi trường production. Frontend gửi cookie qua fetch với `credentials: "include"` và lấy trạng thái từ `/api/auth/me`.
 
-Quyền dữ liệu được kiểm tra theo người sở hữu. ORM không có cột role hay quyền Admin/Guest. Người chưa có phiên chỉ có thể dùng các chức năng công khai. Code không seed tài khoản mặc định; người dùng mới đăng ký qua ứng dụng.
+Quyền dữ liệu được kiểm tra theo người sở hữu. ORM không có cột role hay quyền Admin/Guest. Người chưa có phiên chỉ có thể dùng các chức năng công khai. Code không seed tài khoản mặc định; người dùng mới đăng ký qua ứng dụng. Lệnh `scripts/seed_user.py` là tùy chọn chủ động, đọc biến môi trường và không ghi đè người dùng đã có; xem [hướng dẫn tài khoản/secret](docs/security.md).
 
 | Model ORM | Bảng | Các cột |
 |---|---|---|

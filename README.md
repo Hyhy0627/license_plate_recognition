@@ -39,7 +39,7 @@ Mở hai terminal tại thư mục gốc:
 npm --prefix frontend run dev
 ```
 
-Mở [giao diện web](http://localhost:3000) và đăng ký tại `/register`. Database được khởi tạo khi backend chạy; code không seed tài khoản mặc định. Các tài khoản có sẵn trên máy phát triển không đi kèm bản clone.
+Mở [giao diện web](http://localhost:3000) và đăng ký tại `/register`. Database được khởi tạo khi backend chạy; code không seed tài khoản mặc định. Các tài khoản có sẵn trên máy phát triển không đi kèm bản clone. Nếu cần tạo bằng CLI, dùng [lệnh seed chủ động](docs/security.md); không có mật khẩu mặc định.
 
 | Trang | Chức năng |
 |---|---|
@@ -57,6 +57,7 @@ Backend có [Swagger](http://localhost:8000/docs) và [ReDoc](http://localhost:8
 | Hiểu module, luồng xử lý, API và database | [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) |
 | Tra script kỹ thuật | [scripts/README.md](scripts/README.md) |
 | Cài model | [models/weights_readme.txt](models/weights_readme.txt) |
+| Quản lý tài khoản seed và secret | [docs/security.md](docs/security.md) |
 | Hiểu dữ liệu gửi qua NineRouter | [docs/cloud_ocr.md](docs/cloud_ocr.md) |
 | Cấu hình và đánh giá video | [docs/video_onnx.md](docs/video_onnx.md) |
 | Chạy test và kiểm tra frontend | [tests/TESTING.md](tests/TESTING.md) |

@@ -6,6 +6,8 @@
 |---|---|
 | [cloud_ocr.md](cloud_ocr.md) | Điều kiện gọi NineRouter, dữ liệu gửi đi và cấu hình local |
 | [video_onnx.md](video_onnx.md) | Luồng video, mode/engine, giới hạn xử lý và cách đo |
+| [security.md](security.md) | Tài khoản, lệnh seed riêng và phạm vi rà soát secret |
+| [Kết quả giai đoạn 3](results/security_hardening.md) | Kiểm thử seed, migration và bảo mật cơ bản |
 | [data.md](data.md) | Dữ liệu runtime và fixture được version hóa |
 | [tools/README.md](tools/README.md) | Phạm vi công cụ tài liệu và script đã ngừng dùng |
 | [Kết quả giai đoạn 2](results/repository_cleanup.md) | Các đường dẫn đã chuyển và kiểm tra tính toàn vẹn |
