@@ -1,6 +1,6 @@
 # Dữ liệu dự án
 
-Các đường dẫn tính từ thư mục gốc repository. Git giữ tài liệu này, bộ ảnh và nhãn trong `test_cases/`, cùng các tệp `.gitkeep` của `raw/` và `outputs/`. Database, ảnh đầu ra và bằng chứng chạy thử được giữ cục bộ theo `.gitignore`; bản clone mới không có sẵn lịch sử nhận diện.
+Các đường dẫn tính từ thư mục gốc repository. Git giữ tài liệu này, bộ ảnh và nhãn trong `test_cases/`, cùng các tệp `.gitkeep` của `raw/` và `outputs/`. Database, ảnh trong hai thư mục đầu ra chuẩn và các thư mục bằng chứng đã liệt kê trong `.gitignore` được giữ cục bộ; bản clone mới không có sẵn lịch sử nhận diện. Quy tắc hiện tại chưa bao phủ mọi file đặt trực tiếp trong `data/outputs/`, vì vậy cần kiểm tra `git status` trước khi commit file runtime ngoài các thư mục chuẩn.
 
 | Đường dẫn | Nội dung |
 |---|---|
@@ -10,6 +10,7 @@ Các đường dẫn tính từ thư mục gốc repository. Git giữ tài li�
 | `data/test_real_web/` | Ảnh thật, nguồn ảnh, nhãn đối chứng và bằng chứng kiểm thử web. |
 | `data/recognition_regression/` | Manifest, ảnh và kết quả so sánh các lượt nhận diện. |
 | `data/benchmarks/` | Kết quả benchmark offline. |
+| `data/video_jobs/` | Video tải lên; thông tin job/progress ở bộ nhớ backend, không phải một bảng DB. |
 | `data/notebook_runs/` | Bản notebook đã thực thi. |
 | `data/auth_verification/` | Bằng chứng QA tài khoản và log dịch vụ. |
 | `data/raw/` | Dữ liệu thô để bổ sung tập huấn luyện; hiện chỉ có `.gitkeep`. |
@@ -23,6 +24,8 @@ Các đường dẫn tính từ thư mục gốc repository. Git giữ tài li�
 
 ## Theo dõi và dọn dữ liệu
 
-`data/test_real_web/` được giữ cục bộ và không đưa lên Git. Lệnh hồi quy nên nhận manifest riêng qua `tool/check_regression.py --cases <đường-dẫn-manifest>`. Nếu chạy công cụ không có `--cases`, nó dùng ảnh và nhãn cục bộ trong thư mục này; bản clone mới sẽ không có các tệp đó.
+`data/test_real_web/` được giữ cục bộ và không đưa lên Git. Lệnh hồi quy nên nhận manifest riêng qua `benchmark/check_regression.py --cases <đường-dẫn-manifest>`. Nếu chạy công cụ không có `--cases`, nó dùng ảnh và nhãn cục bộ trong thư mục này; bản clone mới sẽ không có các tệp đó.
 
-Trước khi xóa một lượt chạy, kiểm tra tham chiếu trong notebook, manifest, [tài liệu QA](../docs/QA_TESTER.md) và các URL ảnh trong database. Notebook 01 dùng `data/recognition_regression/hardening_20261105/all_cases.json`; Notebook 03 trỏ tới các lượt benchmark và hồi quy ngày 05/11/2026. Một số manifest còn dùng ảnh ở `20261105T081832_650282Z_before`; không xóa chỉ vì tên thư mục cũ. Xem thêm [hướng dẫn notebook](../notebooks/README.md).
+Trước khi xóa một lượt chạy, kiểm tra tham chiếu trong notebook, manifest, tài liệu QA cục bộ (`docs/QA_TESTER.md`) và các URL ảnh trong database. Notebook 01 dùng `data/recognition_regression/hardening_20261105/all_cases.json`; Notebook 03 trỏ tới các lượt benchmark và hồi quy ngày 05/11/2026. Một số manifest còn dùng ảnh ở `20261105T081832_650282Z_before`; không xóa chỉ vì tên thư mục cũ. Xem thêm [hướng dẫn notebook](../notebooks/README.md).
+
+Tập fixture tổng hợp hiện còn ở `data/test_cases/`; việc chuyển sang `tests/fixtures/` là đề xuất chưa thực hiện. Trạng thái schema và phân quyền xem [kiến trúc dự án](../PROJECT_STRUCTURE.md); cách lấy kết quả kiểm tra xem [tests/TESTING.md](../tests/TESTING.md).

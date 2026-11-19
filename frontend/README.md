@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PlateSight frontend
 
-## Getting Started
+Giao diện Next.js 16.4.5 và React 19.3.0 theo `package.json`. [README gốc](../README.md) hướng dẫn cài backend/model và chạy hai dịch vụ; [kiến trúc dự án](../PROJECT_STRUCTURE.md) mô tả API, phiên đăng nhập và dữ liệu.
 
-First, run the development server:
+## Chạy frontend
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Từ thư mục gốc, sau khi cài môi trường backend theo README:
+
+```powershell
+npm --prefix frontend ci
+npm --prefix frontend run dev -- --port 3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Backend cần được khởi động ở terminal khác bằng `.\venv\Scripts\python.exe main.py`. Mở [localhost:3000](http://localhost:3000), đăng ký tài khoản mới khi chưa có tài khoản cục bộ.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Địa chỉ API và cookie
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`src/lib/api.ts` mặc định gọi `http://localhost:8000`. Nếu backend ở địa chỉ khác, tạo `frontend/.env.local`:
 
-## Learn More
+```dotenv
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-To learn more about Next.js, take a look at the following resources:
+Đồng thời thêm origin frontend vào `CORS_ORIGINS` trong `.env` backend. Frontend gọi API trực tiếp; `next.config.ts` hiện không khai báo API proxy. Với bản production, cần đặt biến `NEXT_PUBLIC_API_URL` khi build và build lại nếu đổi địa chỉ; biến môi trường chỉ đặt lúc chạy container không tự cập nhật mã trình duyệt đã build.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Auth provider đọc `/api/auth/me`; fetch gửi cookie với `credentials: "include"`. Backend lưu phiên và kiểm tra chủ sở hữu lịch sử/ảnh/video. Frontend không quản lý JWT hoặc vai trò Admin/Guest.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Trang `/video` gửi video tải lên, polling trạng thái job và vẽ annotation theo metadata trên file media. Đây không phải luồng camera trực tiếp. `/history` hiển thị lịch sử nhận diện ảnh của tài khoản; chưa có chức năng xuất/xóa lịch sử.
 
-## Deploy on Vercel
+## Kiểm tra
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```powershell
+npm --prefix frontend run lint
+npm --prefix frontend run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Kết quả kiểm tra có thời điểm/phạm vi cụ thể nằm tại [báo cáo đồng bộ tài liệu](../docs/results/documentation_sync.md). Lint/build không thay cho kiểm thử thao tác trình duyệt hoặc độ chính xác AI; xem [hướng dẫn kiểm thử](../tests/TESTING.md).

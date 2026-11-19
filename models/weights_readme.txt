@@ -1,15 +1,33 @@
-﻿# THƯ MỤC LƯU TRỮ MODEL WEIGHTS
+# Trọng số mô hình
 
-Vui lòng đặt các file trọng số mô hình đã huấn luyện vào đây:
+Các đường dẫn tính từ thư mục gốc repository. Trọng số được ignore trong Git.
 
-1. `best.pt`: Trọng số mô hình YOLO phát hiện biển số xe (được huấn luyện bởi Người 2).
-   - Tải về từ quá trình train YOLO (ví dụ: runs/detect/train/weights/best.pt).
-   - Đặt trực tiếp tại: `models/best.pt` hoặc `models/plate_detection/best.pt`.
+Ảnh — bắt buộc khi backend khởi động:
+- models/best.pt: YOLO phát hiện biển số.
+- models/LP_ocr.pt: YOLO nhận dạng ký tự.
 
-2. Thư mục con `ocr/`: Chứa các trọng số fine-tune OCR (nếu Người 3 có tùy biến mô hình OCR).
+Hai file trên cần được cung cấp riêng từ bộ model hiện có. Repository chưa có
+script tải tự động hoặc pipeline huấn luyện tái lập cho chúng. Không suy ra
+nguồn dữ liệu/việc nhóm tự huấn luyện chỉ từ tên file best.pt hoặc LP_ocr.pt.
 
-3. `easyocr/english_g2.pth`: OCR dòng dự phòng local cho vùng biển YOLO chưa đọc được.
-   - Cài rõ ràng bằng: `venv\Scripts\python.exe tool/setup_ocr.py --download`
-   - Nguồn: https://github.com/JaidedAI/EasyOCR/releases/download/v1.3/english_g2.zip
-   - Thư viện EasyOCR đã có trong requirements.txt; script kiểm tra checksum theo metadata của thư viện.
-   - Backend chỉ nạp file có sẵn, không tự tải model trong request. Thiếu file thì bỏ qua bước dự phòng này.
+Video — cần khi phân tích video:
+- yolov8n.pt: YOLO phát hiện phương tiện; hiện đặt tại thư mục gốc.
+- models/video/DetectLisence_YOLO11.pt: detector biển của bộ video mặc định.
+- models/video/cct_s_v1_vn.onnx: OCR của bộ video mặc định.
+- models/video/cct_s_v1_vn_plate_config.yaml: cấu hình khớp OCR.
+
+Cài hai trọng số biển video và cấu hình đi kèm:
+    .\venv\Scripts\python.exe scripts/setup_video_models.py
+Script kiểm tra SHA256, tải trọng số thiếu/sai checksum và sao chép cấu hình
+đã lưu tại src/core/video_ocr.yaml. Script không cài yolov8n.pt; cần cung cấp
+riêng file phương tiện đó. Nguồn/các thay đổi tích hợp: THIRD_PARTY_NOTICES.md.
+
+EasyOCR dòng dự phòng (tùy chọn):
+    .\venv\Scripts\python.exe scripts/setup_ocr.py --download
+Model lưu tại models/easyocr/english_g2.pth; script kiểm tra checksum theo
+metadata EasyOCR. LocalLineOCR chỉ nạp file đã có, không tải trọng số trong request.
+Nhánh OCR truyền thống khác của PlateOCREngine có cơ chế nạp riêng; không khẳng
+định mọi engine EasyOCR/PaddleOCR đều đã nạp chỉ vì dependency được cài.
+
+Hướng dẫn tổng thể: README.md.
+Engine/mode video và điều kiện remote: docs/video_onnx.md, docs/cloud_ocr.md.

@@ -1,13 +1,18 @@
 # Hướng dẫn kiểm thử và đánh giá
 
-Mọi lệnh chạy từ **thư mục gốc repository**.
+Mọi lệnh chạy từ **thư mục gốc repository**. Test tài khoản dùng cookie phiên và kiểm tra chủ sở hữu dữ liệu; cơ chế xác thực được mô tả tại [kiến trúc dự án](../PROJECT_STRUCTURE.md).
+
+Bộ kiểm thử thao tác người dùng và benchmark tổng hợp mới:
+[benchmark/README.md](../benchmark/README.md). Chạy
+`.\venv\Scripts\python.exe benchmark/benchmark_all.py` để xuất báo cáo HTML/JSON/CSV
+bao gồm pytest, TypeScript, ESLint và Playwright. Runner không chạy production build; lệnh build được chạy riêng bên dưới. Thêm `--real` để đo model thật.
 
 ---
 
 ## 1. Kiểm thử tự động
 
 ```powershell
-.\venv\Scripts\python.exe -m unittest discover -s tests -v
+.\venv\Scripts\python.exe -m pytest tests -q
 npm --prefix frontend run lint
 npm --prefix frontend run build
 ```
@@ -21,14 +26,14 @@ Các bài kiểm thử Python bao gồm: tài khoản, phân quyền dữ liệu
 Cần có ảnh và `data/test_cases/ground_truth.json` trước khi chạy:
 
 ```powershell
-.\venv\Scripts\python.exe tool/benchmark.py --dataset-kind synthetic
+.\venv\Scripts\python.exe benchmark/benchmark.py --dataset-kind synthetic
 ```
 
 Kết quả lưu vào `data/benchmarks/<run-id>/`, gồm `metrics.json`, `predictions.json`, `per_image.csv` và các biểu đồ nếu bật xuất biểu đồ.
 
 Bộ `data/test_cases` hiện tại là ảnh tổng hợp. Benchmark đo detector, YOLO OCR và hậu xử lý; **không** bao gồm nhánh dự phòng API, cloud, HTTP, database hoặc giao diện. Chỉ số từ bộ này không đại diện độ chính xác trên ảnh giao thông thật.
 
-Xem định nghĩa chỉ số, định dạng nhãn và phạm vi benchmark: [`tool/BENCHMARK.md`](../tool/BENCHMARK.md).
+Xem định nghĩa chỉ số, định dạng nhãn và phạm vi benchmark: [`benchmark/ACCURACY.md`](../benchmark/ACCURACY.md).
 
 ---
 
@@ -60,7 +65,7 @@ Tạo thư mục ảnh, ví dụ `data/my_test_set/`, và manifest `data/my_test
 `expected` liệt kê tất cả biển số có thể xác định trong ảnh; dùng mảng rỗng cho ảnh không có biển. Ảnh tổng hợp dùng `kind: "synthetic"`, không trộn với nhóm ảnh thật khi tổng hợp kết quả.
 
 ```powershell
-.\venv\Scripts\python.exe tool/check_regression.py --label local_before --mode local --cases data/my_test_set/cases.json
+.\venv\Scripts\python.exe benchmark/check_regression.py --label local_before --mode local --cases data/my_test_set/cases.json
 ```
 
 Công cụ gọi trực tiếp handler API, sử dụng database và thư mục ảnh đầu ra riêng cho từng lượt. Bằng chứng nằm trong `data/recognition_regression/<run-id>/`, gồm manifest, hash ảnh, nhãn đối chứng và phản hồi nhận diện.
@@ -89,12 +94,20 @@ Notebook phục vụ thực nghiệm và phân tích; không cần chạy để 
 
 ```powershell
 # Chỉ kiểm tra định dạng
-.\venv\Scripts\python.exe tool/run_notebooks.py
+.\venv\Scripts\python.exe notebooks/run_notebooks.py
 
 # Chạy và lưu bản đã thực thi vào data/notebook_runs/<run-id>/
-.\venv\Scripts\python.exe tool/run_notebooks.py --execute
+.\venv\Scripts\python.exe notebooks/run_notebooks.py --execute
 ```
 
 Notebook cần dữ liệu, model và các lượt bằng chứng tương ứng; không tự có đủ dữ liệu sau khi clone.
 
 Xem thêm: [`notebooks/README.md`](../notebooks/README.md). Khi chuyển máy, cập nhật đường dẫn ở ô cấu hình hoặc manifest cho phù hợp.
+
+## 6. Ghi kết quả theo lần chạy
+
+Ghi lệnh, ngày chạy, phiên bản/cấu hình và tổng pass/fail/skip từ kết quả thực tế. Lượt timeout hoặc bị dừng được ghi **chưa hoàn tất**, không suy ra toàn bộ test xanh. Chạy một nhóm file chỉ xác nhận nhóm đó. Xem [kết quả giai đoạn 1](../docs/results/documentation_sync.md).
+
+Khi cần tái hiện lượt kiểm tra không dùng plugin pytest ngoài, đặt `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` trong môi trường của tiến trình kiểm tra và ghi rõ lựa chọn này; đây không phải cấu hình mặc định của runner tổng hợp. Dùng `pytest tests` để giới hạn discovery vào thư mục test; các bản sao cục bộ/archive có thể chứa file cùng mẫu tên.
+
+Các kiểm thử TestClient cần dependency HTTP client tương thích với Starlette đang cài. Việc dependency đã có trên máy phát triển không chứng minh một môi trường mới đã đầy đủ. Kết quả test phần mềm, benchmark local và đánh giá có cloud phải được báo cáo riêng.

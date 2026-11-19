@@ -23,8 +23,8 @@ Thư viện notebook được khai báo trong `requirements.txt`. Nếu môi tr�
 Kiểm tra định dạng hoặc chạy cả ba notebook bằng Python của dự án:
 
 ```powershell
-.\venv\Scripts\python.exe tool/run_notebooks.py
-.\venv\Scripts\python.exe tool/run_notebooks.py --execute
+.\venv\Scripts\python.exe notebooks/run_notebooks.py
+.\venv\Scripts\python.exe notebooks/run_notebooks.py --execute
 ```
 
 `run_notebooks.py` dùng để kiểm tra và chạy tự động. Nó không sinh KPI ghi sẵn hoặc ghi đè notebook nguồn.
@@ -43,3 +43,5 @@ Notebook 03 kiểm tra lại metric tổng hợp từ `predictions.json`, kiểm
 Benchmark offline, handler local và Brave/hybrid có phạm vi khác nhau; không gộp độ chính xác/độ trễ. Thiếu `after_ui/results.json` được ghi **chưa xác minh Brave sau sửa**.
 
 Notebook hỗ trợ phân tích; kiểm thử tự động trong `tests/` và kiểm thử trực tiếp trên web vẫn là các bước riêng.
+
+Các notebook và báo cáo lịch sử không thay cho hướng dẫn kiến trúc hiện hành tại [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md). Việc runner xác nhận định dạng notebook hợp lệ không có nghĩa đã thực thi notebook hoặc tái lập được các số liệu. Trạng thái đợt đồng bộ: [kết quả kiểm tra](../docs/results/documentation_sync.md).
