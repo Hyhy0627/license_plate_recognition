@@ -5,7 +5,7 @@ from unittest.mock import patch
 import cv2
 import pytest
 
-from src.core.video.tracker import process_video
+from src.core.video_tracker import process_video
 
 
 @pytest.mark.parametrize("fps,count,width,height,error", [
@@ -27,7 +27,7 @@ def test_video_metadata_limits(tmp_path, fps, count, width, height, error):
         def release(self):
             self.released = True
     capture = Capture()
-    with patch("src.core.video.tracker.cv2.VideoCapture", return_value=capture):
+    with patch("src.core.video_tracker.cv2.VideoCapture", return_value=capture):
         with pytest.raises(ValueError, match=error):
             process_video(tmp_path / "clip.mp4", weight, None, None, Lock(), lambda _: None)
     assert capture.released

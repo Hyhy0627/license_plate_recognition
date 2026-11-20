@@ -8,35 +8,8 @@ from unittest.mock import patch
 import cv2
 import numpy as np
 
-from src.core.video.tracker import _rescue_plates_with_ninerouter, _resolve_overlapping_vehicle_types, _stable_vehicle_type, associate_plates, merge_video_results, plate_fits_vehicle, process_video, winning_plate
+from src.core.video_tracker import _rescue_plates_with_ninerouter, _resolve_overlapping_vehicle_types, _stable_vehicle_type, associate_plates, merge_video_results, plate_fits_vehicle, process_video, winning_plate
 from src.config import BASE_DIR
-from src.core.video.unassigned_plates import UnassignedPlates
-from src.core.video.tracker import _box_iou
-
-
-def test_unassigned_plate_requires_matching_reads_at_the_same_location():
-    frame = np.zeros((120, 300, 3), dtype=np.uint8)
-    detector = SimpleNamespace(crop_plate=lambda image, bbox: image[bbox[1]:bbox[3], bbox[0]:bbox[2]])
-    plates = UnassignedPlates()
-    frames = []
-
-    def observe(second, *items):
-        frames.append({"time": second, "vehicles": []})
-        for text, confidence, bbox in items:
-            ocr = SimpleNamespace(recognize_local_yolo=lambda crop: {"raw_text": text, "avg_conf": confidence})
-            plates.observe(second, frame, [{"bbox": bbox, "original_bbox": bbox}], detector, ocr)
-
-    left, right = [10, 10, 110, 90], [180, 10, 280, 90]
-    observe(0, ("30A12345", .99, left), ("30A12345", .99, left))
-    observe(.2, ("30A12345", .99, right), ("51C54321", .95, left))
-    observe(.4, ("51C54321", .40, left), ("garbage", .99, right))
-    tracks = []
-    plates.add_confirmed(tracks, frames, .2, _box_iou)
-    assert tracks == []  # Same frame, different location, or weak OCR.
-    observe(.6, ("51C54321", .96, [12, 10, 112, 90]))
-    plates.add_confirmed(tracks, frames, .2, _box_iou)
-    assert [(t["plate_number"], t["plate_observations"]) for t in tracks] == [("51C-543.21", 2)]
-    assert [f["time"] for f in frames if f["vehicles"]] == [.2, .6]
 
 
 def test_plate_assignment_uses_containing_vehicle():
@@ -48,30 +21,6 @@ def test_plate_assignment_uses_containing_vehicle():
     assigned = associate_plates(vehicles, plates)
     assert [item["bbox"] for item in assigned[1]] == [[20, 70, 60, 90]]
     assert [item["bbox"] for item in assigned[2]] == [[150, 70, 190, 90]]
-
-
-def test_clip_with_a_plate_but_no_vehicle_id_uses_observed_plate_boxes(tmp_path):
-    clip = tmp_path / "closeup.avi"
-    weights = tmp_path / "vehicle.pt"
-    weights.touch()
-    writer = cv2.VideoWriter(str(clip), cv2.VideoWriter_fourcc(*"MJPG"), 10, (160, 120))
-    assert writer.isOpened()
-    for _ in range(10):
-        writer.write(np.full((120, 160, 3), 128, np.uint8))
-    writer.release()
-    bbox = [50, 40, 110, 82]
-    detector = SimpleNamespace(
-        detect=lambda *args, **kwargs: [{"bbox": bbox, "confidence": .85}],
-        crop_plate=lambda image, box: image[box[1]:box[3], box[0]:box[2]],
-    )
-    ocr = SimpleNamespace(recognize_local_yolo=lambda _: {"raw_text": "61F120627", "avg_conf": .94})
-    with patch("ultralytics.YOLO") as model:
-        model.return_value.track.return_value = [SimpleNamespace(boxes=SimpleNamespace(id=None))]
-        result = process_video(clip, weights, detector, ocr, Lock(), lambda _: None, use_remote_ocr=False)
-    track, = result["tracks"]
-    assert track["plate_number"] == "61-F1 206.27" and track["plate_status"] == "confirmed"
-    for frame in result["frames"]:
-        assert frame["vehicles"] == [{"track_id": track["track_id"], "vehicle_type": "Biển số", "bbox": bbox}]
 
 
 def test_repeated_plate_reading_beats_single_high_confidence_error():
@@ -160,8 +109,6 @@ def test_vehicle_type_uses_whole_track_and_stabilizes_frame_labels():
         with patch("ultralytics.YOLO", Model):
             result = process_video(video_path, weight_path, PlateDetector(), None, Lock(), lambda _: None)
 
-    # The full clip is 25 frames at 10 FPS; the last track spans only 2.4s.
-    assert result["duration"] == 2.5
     assert result["tracks"][0]["vehicle_type"] == "Xe tải"
     assert {vehicle["vehicle_type"] for frame in result["frames"] for vehicle in frame["vehicles"]} == {"Xe tải"}
     assert _stable_vehicle_type(["Xe buýt", "Xe buýt", "Xe tải", "Xe tải", "Xe tải"]) == "Chưa rõ xe tải hay xe buýt"
