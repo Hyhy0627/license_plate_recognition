@@ -4,9 +4,12 @@
 
 | Tài liệu | Phạm vi |
 |---|---|
+| [Backend hardening](results/backend_hardening.md) | Khóa suy luận, OCR thoát sớm/CCT, video jobs, Range, healthcheck và kiểm chứng |
+| [Kết quả giai đoạn 5](results/evaluation.md) | Pytest, lint/build, trình duyệt, Docker và benchmark local/cloud |
 | [cloud_ocr.md](cloud_ocr.md) | Điều kiện gọi NineRouter, dữ liệu gửi đi và cấu hình local |
 | [video_onnx.md](video_onnx.md) | Luồng video, mode/engine, giới hạn xử lý và cách đo |
 | [security.md](security.md) | Tài khoản, lệnh seed riêng và phạm vi rà soát secret |
+| [Kết quả giai đoạn 4](results/service_refactor.md) | Tách core/services, đối chiếu API và kết quả local trước–sau |
 | [Kết quả giai đoạn 3](results/security_hardening.md) | Kiểm thử seed, migration và bảo mật cơ bản |
 | [data.md](data.md) | Dữ liệu runtime và fixture được version hóa |
 | [tools/README.md](tools/README.md) | Phạm vi công cụ tài liệu và script đã ngừng dùng |
@@ -20,6 +23,6 @@
 
 `license_plate_recognition.docx` và `license_plate_recognition.pdf` là bản báo cáo đã có trước đợt đồng bộ Markdown này. Nội dung của hai file chưa được cập nhật/tái xuất ở giai đoạn 1. Số liệu lịch sử trong đó không được dùng như kết quả xác nhận của code hiện tại khi thiếu file bằng chứng tương ứng. Text DOCX đã được rà ở giai đoạn 0; PDF chưa được đối chiếu nội dung.
 
-`figures/` chứa biểu đồ có sẵn. Tên file như `ablation_study.png` không đủ chứng minh đã chạy ablation. Chỉ công bố số liệu khi đối chiếu được dữ liệu đầu vào, cấu hình và kết quả thí nghiệm. Tốc độ/độ chính xác AI trong đợt đồng bộ hiện tại: **chưa đo**.
+`figures/` chứa biểu đồ có sẵn. Tên file như `ablation_study.png` không đủ chứng minh đã chạy ablation. Chỉ công bố số liệu khi đối chiếu được dữ liệu đầu vào, cấu hình và kết quả thí nghiệm. Số đo mới cùng giới hạn áp dụng nằm trong [báo cáo giai đoạn 5](results/evaluation.md).
 
 Tài liệu QA cục bộ, bản handoff và archive bị ignore không phải thành phần bảo đảm có sẵn trong bản clone. Khi sửa hướng dẫn, cập nhật tài liệu có phạm vi tương ứng và kiểm tra với code; không dùng báo cáo hoặc JSON sinh tự động làm nguồn sự thật thay cho implementation.

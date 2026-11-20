@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ScanLine, History, Radio, ChevronRight } from "lucide-react";
+import { ScanLine, History, Radio, ChevronRight, Video } from "lucide-react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -25,8 +25,8 @@ export default function SiteNavigation() {
   }, []);
   return <>
     <nav className="side-nav" aria-label="Điều hướng chính">
-      <span className="nav-caption">KHÔNG GIAN LÀM VIỆC</span>
-      {[{ href: "/", label: "Nhận diện biển số", icon: ScanLine }, { href: "/history", label: "Lịch sử nhận diện", icon: History }].map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={`side-link ${pathname === href ? "is-active" : ""}`} aria-current={pathname === href ? "page" : undefined}><Icon size={19} aria-hidden="true" /><span>{label}</span>{pathname === href && <ChevronRight size={14} aria-hidden="true" />}</Link>)}
+      <span className="nav-caption">Không gian làm việc</span>
+      {[{ href: "/", label: "Nhận diện biển số", icon: ScanLine }, { href: "/video", label: "Theo vết video", icon: Video }, { href: "/history", label: "Lịch sử nhận diện", icon: History }].map(({ href, label, icon: Icon }) => <Link key={href} href={href} className={`side-link ${pathname === href ? "is-active" : ""}`} aria-current={pathname === href ? "page" : undefined}><Icon size={19} aria-hidden="true" /><span>{label}</span>{pathname === href && <ChevronRight size={14} aria-hidden="true" />}</Link>)}
     </nav>
     <div className={`connection-status ${status}`} role="status"><Radio size={16} aria-hidden="true" /><div>{status === "online" ? "Hệ thống sẵn sàng" : status === "offline" ? "Chưa kết nối máy chủ" : "Đang kết nối…"}<small>{status === "online" ? "Có thể bắt đầu nhận diện" : "Trạng thái dịch vụ nhận diện"}</small></div><span className="connection-dot" /></div>
   </>;

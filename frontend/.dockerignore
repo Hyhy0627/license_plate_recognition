@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+.git
+.vscode
+*.log
+
+.next-benchmark
+.env*
+*.tsbuildinfo

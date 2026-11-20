@@ -4,7 +4,7 @@ API phân tích video ngắn, trả metadata theo vết và phục vụ lại fi
 
 ## Mã xử lý và model
 
-`src/core/plate_reader.py` chứa lớp đọc biển được tách khỏi giao diện Streamlit của nguồn kế thừa. Backend dùng phần OCR qua `VideoPlateOCR` trong `src/core/video_models.py`; việc theo vết phương tiện, ghép biển và tổng hợp kết quả của web nằm trong `src/core/video_tracker.py`. Xem [nguồn mã/model](#nguon-ma-va-model).
+`src/core/video/plate_reader.py` chứa lớp đọc biển được tách khỏi giao diện Streamlit của nguồn kế thừa. Backend dùng phần OCR qua `VideoPlateOCR` trong `src/core/video/models.py`; việc theo vết phương tiện, ghép biển và tổng hợp kết quả của web nằm trong `src/core/video/tracker.py`. Xem [nguồn mã/model](#nguon-ma-va-model).
 
 Bộ model video mặc định gồm `DetectLisence_YOLO11.pt` và `cct_s_v1_vn.onnx`, cùng cấu hình OCR. `models/yolov8n.pt` trong thư mục model là model phương tiện dùng để theo vết. Vị trí và lệnh cài đầy đủ nằm tại [hướng dẫn trọng số](../models/weights_readme.txt).
 
@@ -13,6 +13,8 @@ Bộ model video mặc định gồm `DetectLisence_YOLO11.pt` và `cct_s_v1_vn.
 ```
 
 Script chỉ tải trọng số thiếu/sai checksum từ phiên bản cố định và cài cấu hình YAML đi kèm. Runtime dùng mã đã nằm trong `src/`; không cần clone ứng dụng khác. Adapter OCR chuyển BGR sang RGB, loại confidence của padding và không bật thêm bộ tiền xử lý CLAHE/khử nhiễu của lớp kế thừa.
+
+Cache/factory model thuộc `src/services/model_runtime.py`; bộ quản lý job/worker thuộc `src/services/video_jobs.py`. Route chỉ xác thực đầu vào HTTP và gọi service.
 
 ## Engine và chế độ API
 
@@ -41,7 +43,7 @@ Khởi động lại backend sau khi đổi cấu hình. Điều kiện remote v
 - Upload tối đa 100 MB; chấp nhận đuôi MP4, MOV, AVI, WEBM và còn phải giải mã/đọc metadata được.
 - Video tối đa 45 giây, độ phân giải không quá Full HD theo số pixel; tracker kiểm tra metadata và FPS.
 - Profile fast/detailed đặt mục tiêu lấy mẫu 5 frame/giây, kích thước suy luận phương tiện 640. Stride được làm tròn từ FPS nguồn nên tần suất mẫu thực tế có thể khác; đây là cấu hình, không phải FPS xử lý đo được.
-- Executor có một worker; tổng job queued/running tối đa hai. Job/progress/result được giữ trong bộ nhớ và không khôi phục sau khi backend khởi động lại.
+- Executor có một worker; tổng job queued/running tối đa hai. Job/progress/result được lưu vào bảng SQLite `video_jobs`. Kết quả hoàn tất vẫn đọc được sau restart; job bị gián đoạn được đánh dấu failed khi truy vấn hoặc nhận job mới, không tự chạy lại. File lock cần dùng chung cùng thư mục video/SQLite giữa các worker trên máy chủ.
 - Detector/OCR biển video được cache theo tiến trình; model phương tiện/tracker được tạo mới cho từng video.
 - Kết quả tổng hợp có thể vẫn sai dù lặp lại qua nhiều frame. Kiểm tra định dạng biển không chứng minh nội dung đúng.
 
@@ -67,15 +69,15 @@ Trong đợt đồng bộ tài liệu, hiệu năng và độ chính xác video 
 - Tác giả/repository: [ddkhoa2605/LicensePlateDetection](https://github.com/ddkhoa2605/LicensePlateDetection).
 - Phiên bản: `f1c732e2270becc44df1de6529372f63ef251076`.
 - File gốc: `appStreamlit.py`, lớp `SimplePlateDetector`.
-- File tích hợp: `src/core/plate_reader.py`, lớp `PlateReader`.
+- File tích hợp: `src/core/video/plate_reader.py`, lớp `PlateReader`.
 - Các thuật toán kế thừa: tiền xử lý crop, crop có padding, bỏ phiếu ký tự theo confidence, quản lý vòng đời track và xử lý frame.
 - Điều chỉnh của đồ án: bỏ phụ thuộc Streamlit; nạp model tùy chọn; cập nhật API Fast Plate OCR 1.1; chuyển BGR sang RGB; loại padding trước khi tính confidence; cho phép tắt tiền xử lý trong adapter video để giữ luồng đang chạy.
-- Backend dùng OCR từ lớp này qua `VideoPlateOCR`; theo vết phương tiện và schema trả về cho web vẫn nằm trong `src/core/video_tracker.py`.
+- Backend dùng OCR từ lớp này qua `VideoPlateOCR`; theo vết phương tiện và schema trả về cho web vẫn nằm trong `src/core/video/tracker.py`.
 
 Thông tin nguồn được giữ để phân biệt phần kế thừa với phần nhóm tự triển khai. Repository gốc không có file LICENSE riêng tại phiên bản được tích hợp; tài liệu này không cấp thêm quyền sử dụng.
 
 ### Trọng số và cấu hình OCR
 
-`DetectLisence_YOLO11.pt`, `cct_s_v1_vn.onnx` và cấu hình `cct_s_v1_vn_plate_config.yaml` lấy từ cùng phiên bản trên. Cấu hình được lưu tại `src/core/video_ocr.yaml`; trọng số được cài riêng bằng `scripts/setup_video_models.py` với SHA256 cố định. Không coi các trọng số này là model do nhóm tự huấn luyện.
+`DetectLisence_YOLO11.pt`, `cct_s_v1_vn.onnx` và cấu hình `cct_s_v1_vn_plate_config.yaml` lấy từ cùng phiên bản trên. Cấu hình được lưu tại `src/core/video/video_ocr.yaml`; trọng số được cài riêng bằng `scripts/setup_video_models.py` với SHA256 cố định. Không coi các trọng số này là model do nhóm tự huấn luyện.
 
 Ultralytics, Fast Plate OCR và ONNX Runtime vẫn là các thư viện cài qua `requirements.txt`, không phải mã do nhóm tự phát triển.

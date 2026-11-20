@@ -1,0 +1,710 @@
+{
+  "before": {
+    "source": "data/recognition_regression/20261119T164549_664505Z_hardening_before/results.json",
+    "threads": 2,
+    "model_hashes": {
+      "best.pt": "bde8d2007b7517f8237b77459f11a889513d158d7252355576c2b35e6e6a316a",
+      "LP_ocr.pt": "67c1ad8dbe4ad1b138d64b9e31e495e07abfc9d44e7787aed1845dc580473c77",
+      "easyocr/english_g2.pth": "e2272681d9d67a04e2dff396b6e95077bc19001f8f6d3593c307b9852e1c29e8"
+    },
+    "code_hashes": {
+      "src\\config.py": "57d16631b59edc6307a89b7e267434df2936ae762680704608b6502e533209d8",
+      "src\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src\\api\\auth.py": "5ce5a955b12b613b97566bd69ca8d2b18b221f6f85039147ea344ace69a392f5",
+      "src\\api\\routes.py": "1843dcc376caa966abb1b99b5ee05a84d29f7b46d221d8b8257dbd07605b6442",
+      "src\\api\\video_routes.py": "c7cf20130801f9896bd3d219134137c87aaae67f3abd4497affddb0f5e1c518a",
+      "src\\api\\__init__.py": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "src\\core\\exceptions.py": "bb3792d3e881ff4feb0d1bfcdcce66c75c12c14014f776c17f8ddb517c51e506",
+      "src\\core\\__init__.py": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "src\\db\\migrations.py": "b71e7c9604482b4e72c4ea8b59b1dbd7713d38b92d530a73b5480dbafa37bf0b",
+      "src\\db\\models.py": "5ff5920261c94f026a2283ab83436e468e7bff068b1a83ffbe4e5260d3efb2b9",
+      "src\\db\\seed.py": "a6090e2e59b234065b3c9991b7cb5977efad9b1f36c9d0b3c453f6e4c6d7f144",
+      "src\\db\\session.py": "bcd3fc872056fc4338a8a35bb57257a8f2c018e82deee8f4f0fa56abd7645d24",
+      "src\\db\\__init__.py": "c2e6b809ea760b3e01c76795b7901fce74ab701d8a264e75b731652a7118c027",
+      "src\\evaluation\\metrics.py": "e2d21fca59eac7eb265460215c7e3757ce8ee21901e24c64b27167871620845c",
+      "src\\evaluation\\__init__.py": "f854760655f13fbd6966f5522566befdb281c44249f0c1ea70f2ed88df9e4eb9",
+      "src\\services\\authentication.py": "1b4200c2f3adab9d99988e9c6daf175bb7143241e26c27ed6c89d81afe0aca4b",
+      "src\\services\\history.py": "f2b21bdca5968cf56a3523b7edce5239affab06bf16619ac5539bdbe89028f13",
+      "src\\services\\image_recognition.py": "b3bd15039c679938039c6267fa3df685b632e78f399f4bd854023ceb68f80305",
+      "src\\services\\model_runtime.py": "1c23734d35f8a4299149ae0462d2b0e5bc6d6484530f0b0834e61318c6d1de27",
+      "src\\services\\result_media.py": "9c5a91f66b5c420189f66fd6e43f31bad9c276916c0f69eff73c41e29116b83b",
+      "src\\services\\schemas.py": "b7e1cde1ce5fc69e23a0a77d7b9df928c4cae3cdb9dc3cd83f2bc6e43637ffac",
+      "src\\services\\video_jobs.py": "5498c82b51dee358c82a3ecd6080374e1bd3537d86993c3c232c0ef550b9284b",
+      "src\\services\\__init__.py": "f3c42067e7e394f05fecc8ec11096c94fdbf68866f1706ce573f0cccdeacc1b2",
+      "src\\utils\\logger.py": "b5588de45167f673e4539f088a3836b430df6ee5dd2c69cf73b98c7645e47591",
+      "src\\utils\\visualizer.py": "5ce4edaa41e68bf48ff1c11c3025612e488e40ce440403267f8182aa3f6fdaca",
+      "src\\utils\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src\\core\\image\\character_regions.py": "f5adf6bed03021cd3c353ca6d8cba6f5f6e537f05713dec3ba6fa03f3879882b",
+      "src\\core\\image\\detector.py": "24645599f65989c3d410f44cc5c9c62278b350a8e703277b8657481f48a5cbe6",
+      "src\\core\\image\\plate_regions.py": "8998d4064ed5c7e589358f1e540c2766bc7fa7e99fe596a159d9ceeca91dbecf",
+      "src\\core\\image\\preprocessor.py": "5014c40660810124cda9b553c094aa8d0ade062598a5c115f26ae0446e9ed932",
+      "src\\core\\image\\__init__.py": "fd32786fbaddff039c2d41dfa80ad183f79ad7eda7b978a984333387e4372a1b",
+      "src\\core\\integrations\\ninerouter_vision.py": "5573ffa1e5614dd047796659c27e807cc731814ab7bf10648f82c644e7984e32",
+      "src\\core\\integrations\\__init__.py": "b7008ac001c28538e65811f28adf8b19307f6a827bf88fa890b20c94aa264d9e",
+      "src\\core\\ocr\\engine.py": "d9fbdf3e1cdec1537c5c7962a8948b5fb3ff947dc34fa0adf9470cc39cb5714d",
+      "src\\core\\ocr\\line_ocr.py": "0a053573aa72b15a5b69bb2a6586142776dfc1d2f0a5b54fe450d0b92d9a9f92",
+      "src\\core\\ocr\\postprocessor.py": "5e709d38d283c28fd6dd461dd22ff1eeb4544bc2ddf6e2634ad2af53054d6e1c",
+      "src\\core\\ocr\\__init__.py": "b3f2abf99ecb3b154edab983c07977f4405153ce14dceb55599f3fb59c7e2807",
+      "src\\core\\video\\models.py": "75434731c433e41d68780ada59dfefe0735925b3ea71ec05f684d79beaf612ed",
+      "src\\core\\video\\plate_reader.py": "586c3b56dc8a6d07c0fc7b8c8af741cd92b12290e0bc193b6b52ae619e83cf30",
+      "src\\core\\video\\tracker.py": "954f358070fb4850f50682fb55968d26bae3de66da9fb45d1557310dc43b8a85",
+      "src\\core\\video\\__init__.py": "8a52bfa034dac77014e7fcc1668e9ef52b4edc10fefc18888a53d98a32c5edfd"
+    },
+    "cases": [
+      {
+        "id": "motorbike_69B1_77777",
+        "sha256": "ba4af142df9f41c679be7d2f01c6f848117556e54dba1d4a6130e9b462a6d347",
+        "expected": [
+          "69-B1 777.77"
+        ],
+        "wall_ms": 4748.86,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 4748.11,
+          "results": [
+            {
+              "plate_number": "69-B1 777.77",
+              "confidence": 0.9028,
+              "plate_type": "two_line",
+              "bbox": [
+                281,
+                206,
+                479,
+                358
+              ],
+              "engine_used": "local_yolo_ocr_fallback",
+              "cropped_image_url": "/static/cropped_plates/crop_f4a5fcdb600647eba197542f715753c4.jpg",
+              "annotated_image_url": "/static/final_results/result_f68bdf97d2314c4abdd5ace5f51f5844.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      },
+      {
+        "id": "car_30A_11111",
+        "sha256": "77c705badfbcdcda78325e86a604751646f58120252660758cf446156e014852",
+        "expected": [
+          "30A-111.11"
+        ],
+        "wall_ms": 1587.6,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 1587.04,
+          "results": [
+            {
+              "plate_number": "30A-111.11",
+              "confidence": 0.8495,
+              "plate_type": "one_line",
+              "bbox": [
+                199,
+                429,
+                414,
+                476
+              ],
+              "engine_used": "local_yolo_ocr_fallback",
+              "cropped_image_url": "/static/cropped_plates/crop_796b5963572f427794f48a4d4a3a4b3c.jpg",
+              "annotated_image_url": "/static/final_results/result_032af14590f0440288ac89b55d58f9eb.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      },
+      {
+        "id": "car_30A_88888",
+        "sha256": "38ee443a05c34f346a3ff006924b878583cd15b59f1c4b7dec91d7ace96e0d1d",
+        "expected": [
+          "30A-888.88"
+        ],
+        "wall_ms": 1721.28,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 1720.72,
+          "results": [
+            {
+              "plate_number": "30A-888.88",
+              "confidence": 0.8858,
+              "plate_type": "one_line",
+              "bbox": [
+                300,
+                448,
+                522,
+                498
+              ],
+              "engine_used": "local_yolo_ocr_fallback",
+              "cropped_image_url": "/static/cropped_plates/crop_de211234d30a4b39bc9b14eb47f992e1.jpg",
+              "annotated_image_url": "/static/final_results/result_dba84350087b40c5a743a8b3e4221dce.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      }
+    ]
+  },
+  "yolo_final": {
+    "source": "data/recognition_regression/20261119T165226_635380Z_hardening_fixed/results.json",
+    "threads": 2,
+    "model_hashes": {
+      "best.pt": "bde8d2007b7517f8237b77459f11a889513d158d7252355576c2b35e6e6a316a",
+      "LP_ocr.pt": "67c1ad8dbe4ad1b138d64b9e31e495e07abfc9d44e7787aed1845dc580473c77",
+      "easyocr/english_g2.pth": "e2272681d9d67a04e2dff396b6e95077bc19001f8f6d3593c307b9852e1c29e8"
+    },
+    "code_hashes": {
+      "src\\config.py": "264b0ae4efc62dbd11694833240a1d87b6bc6718519aadb9585167cffde1f707",
+      "src\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src\\api\\auth.py": "5ce5a955b12b613b97566bd69ca8d2b18b221f6f85039147ea344ace69a392f5",
+      "src\\api\\routes.py": "1843dcc376caa966abb1b99b5ee05a84d29f7b46d221d8b8257dbd07605b6442",
+      "src\\api\\video_routes.py": "c7cf20130801f9896bd3d219134137c87aaae67f3abd4497affddb0f5e1c518a",
+      "src\\api\\__init__.py": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "src\\core\\exceptions.py": "bb3792d3e881ff4feb0d1bfcdcce66c75c12c14014f776c17f8ddb517c51e506",
+      "src\\core\\__init__.py": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "src\\db\\migrations.py": "b71e7c9604482b4e72c4ea8b59b1dbd7713d38b92d530a73b5480dbafa37bf0b",
+      "src\\db\\models.py": "5ff5920261c94f026a2283ab83436e468e7bff068b1a83ffbe4e5260d3efb2b9",
+      "src\\db\\seed.py": "a6090e2e59b234065b3c9991b7cb5977efad9b1f36c9d0b3c453f6e4c6d7f144",
+      "src\\db\\session.py": "bcd3fc872056fc4338a8a35bb57257a8f2c018e82deee8f4f0fa56abd7645d24",
+      "src\\db\\__init__.py": "c2e6b809ea760b3e01c76795b7901fce74ab701d8a264e75b731652a7118c027",
+      "src\\evaluation\\metrics.py": "e2d21fca59eac7eb265460215c7e3757ce8ee21901e24c64b27167871620845c",
+      "src\\evaluation\\__init__.py": "f854760655f13fbd6966f5522566befdb281c44249f0c1ea70f2ed88df9e4eb9",
+      "src\\services\\authentication.py": "1b4200c2f3adab9d99988e9c6daf175bb7143241e26c27ed6c89d81afe0aca4b",
+      "src\\services\\history.py": "f2b21bdca5968cf56a3523b7edce5239affab06bf16619ac5539bdbe89028f13",
+      "src\\services\\image_recognition.py": "2f88a26ea194c86bd9a716bab5611c001368cb9518a0d56ec5d0fc2888ee0b43",
+      "src\\services\\model_runtime.py": "19b07adf60df298c8633a8059c780023f89d0040b97e88737c1c352eeee123f4",
+      "src\\services\\result_media.py": "9c5a91f66b5c420189f66fd6e43f31bad9c276916c0f69eff73c41e29116b83b",
+      "src\\services\\schemas.py": "b7e1cde1ce5fc69e23a0a77d7b9df928c4cae3cdb9dc3cd83f2bc6e43637ffac",
+      "src\\services\\video_jobs.py": "5498c82b51dee358c82a3ecd6080374e1bd3537d86993c3c232c0ef550b9284b",
+      "src\\services\\__init__.py": "f3c42067e7e394f05fecc8ec11096c94fdbf68866f1706ce573f0cccdeacc1b2",
+      "src\\utils\\logger.py": "b5588de45167f673e4539f088a3836b430df6ee5dd2c69cf73b98c7645e47591",
+      "src\\utils\\visualizer.py": "5ce4edaa41e68bf48ff1c11c3025612e488e40ce440403267f8182aa3f6fdaca",
+      "src\\utils\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src\\core\\image\\character_regions.py": "f5adf6bed03021cd3c353ca6d8cba6f5f6e537f05713dec3ba6fa03f3879882b",
+      "src\\core\\image\\detector.py": "24645599f65989c3d410f44cc5c9c62278b350a8e703277b8657481f48a5cbe6",
+      "src\\core\\image\\plate_regions.py": "8998d4064ed5c7e589358f1e540c2766bc7fa7e99fe596a159d9ceeca91dbecf",
+      "src\\core\\image\\preprocessor.py": "97d1b5026aa25c39993565ddd2424f46130c086737ace5ccf4bf8c0efaec0ccc",
+      "src\\core\\image\\__init__.py": "fd32786fbaddff039c2d41dfa80ad183f79ad7eda7b978a984333387e4372a1b",
+      "src\\core\\integrations\\ninerouter_vision.py": "5573ffa1e5614dd047796659c27e807cc731814ab7bf10648f82c644e7984e32",
+      "src\\core\\integrations\\__init__.py": "b7008ac001c28538e65811f28adf8b19307f6a827bf88fa890b20c94aa264d9e",
+      "src\\core\\ocr\\engine.py": "222021d72fd97e3a75854271a79a734d697ebe51ccddf8d37f9aacf91a3a9a3b",
+      "src\\core\\ocr\\line_ocr.py": "0a053573aa72b15a5b69bb2a6586142776dfc1d2f0a5b54fe450d0b92d9a9f92",
+      "src\\core\\ocr\\postprocessor.py": "5e709d38d283c28fd6dd461dd22ff1eeb4544bc2ddf6e2634ad2af53054d6e1c",
+      "src\\core\\ocr\\__init__.py": "b3f2abf99ecb3b154edab983c07977f4405153ce14dceb55599f3fb59c7e2807",
+      "src\\core\\video\\models.py": "75434731c433e41d68780ada59dfefe0735925b3ea71ec05f684d79beaf612ed",
+      "src\\core\\video\\plate_reader.py": "586c3b56dc8a6d07c0fc7b8c8af741cd92b12290e0bc193b6b52ae619e83cf30",
+      "src\\core\\video\\tracker.py": "954f358070fb4850f50682fb55968d26bae3de66da9fb45d1557310dc43b8a85",
+      "src\\core\\video\\__init__.py": "8a52bfa034dac77014e7fcc1668e9ef52b4edc10fefc18888a53d98a32c5edfd"
+    },
+    "cases": [
+      {
+        "id": "motorbike_69B1_77777",
+        "sha256": "ba4af142df9f41c679be7d2f01c6f848117556e54dba1d4a6130e9b462a6d347",
+        "expected": [
+          "69-B1 777.77"
+        ],
+        "wall_ms": 2861.45,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 2860.91,
+          "results": [
+            {
+              "plate_number": "69-B1 777.77",
+              "confidence": 0.9064,
+              "plate_type": "two_line",
+              "bbox": [
+                296,
+                212,
+                468,
+                342
+              ],
+              "engine_used": "local_yolo",
+              "cropped_image_url": "/static/cropped_plates/crop_fd496e0e052c4fe6b5e279ebb31cca71.jpg",
+              "annotated_image_url": "/static/final_results/result_be70160568a34c409039d88de9723d66.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      },
+      {
+        "id": "car_30A_11111",
+        "sha256": "77c705badfbcdcda78325e86a604751646f58120252660758cf446156e014852",
+        "expected": [
+          "30A-111.11"
+        ],
+        "wall_ms": 468.22,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 467.73,
+          "results": [
+            {
+              "plate_number": "30A-111.11",
+              "confidence": 0.8423,
+              "plate_type": "one_line",
+              "bbox": [
+                233,
+                422,
+                408,
+                483
+              ],
+              "engine_used": "local_yolo",
+              "cropped_image_url": "/static/cropped_plates/crop_7306e939a25649189ca43525d85d0c4f.jpg",
+              "annotated_image_url": "/static/final_results/result_abc4cd4ea6bd456ba70562c266db87d5.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      },
+      {
+        "id": "car_30A_88888",
+        "sha256": "38ee443a05c34f346a3ff006924b878583cd15b59f1c4b7dec91d7ace96e0d1d",
+        "expected": [
+          "30A-888.88"
+        ],
+        "wall_ms": 416.61,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 416.16,
+          "results": [
+            {
+              "plate_number": "30A-888.88",
+              "confidence": 0.8861,
+              "plate_type": "one_line",
+              "bbox": [
+                317,
+                445,
+                513,
+                508
+              ],
+              "engine_used": "local_yolo",
+              "cropped_image_url": "/static/cropped_plates/crop_b2b0ec0745a948bc9e6e1840dfa9141e.jpg",
+              "annotated_image_url": "/static/final_results/result_52fdaa94733e419da2ac72e64d3e672b.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      }
+    ]
+  },
+  "cct_final": {
+    "source": "data/recognition_regression/20261119T165439_600011Z_hardening_cct/results.json",
+    "threads": 2,
+    "model_hashes": {
+      "best.pt": "bde8d2007b7517f8237b77459f11a889513d158d7252355576c2b35e6e6a316a",
+      "LP_ocr.pt": "67c1ad8dbe4ad1b138d64b9e31e495e07abfc9d44e7787aed1845dc580473c77",
+      "easyocr/english_g2.pth": "e2272681d9d67a04e2dff396b6e95077bc19001f8f6d3593c307b9852e1c29e8",
+      "models\\video\\cct_s_v1_vn.onnx": "99f0ac35f0dd3cf8231c8972d8ee6bd66672bde368c6481f070b164242f128fd",
+      "models\\video\\cct_s_v1_vn_plate_config.yaml": "8ade332ef026520a3360a7c154cc10be664bee25482f3997bce34a7007b4786e"
+    },
+    "code_hashes": {
+      "src\\config.py": "264b0ae4efc62dbd11694833240a1d87b6bc6718519aadb9585167cffde1f707",
+      "src\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src\\api\\auth.py": "5ce5a955b12b613b97566bd69ca8d2b18b221f6f85039147ea344ace69a392f5",
+      "src\\api\\routes.py": "1843dcc376caa966abb1b99b5ee05a84d29f7b46d221d8b8257dbd07605b6442",
+      "src\\api\\video_routes.py": "c7cf20130801f9896bd3d219134137c87aaae67f3abd4497affddb0f5e1c518a",
+      "src\\api\\__init__.py": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "src\\core\\exceptions.py": "bb3792d3e881ff4feb0d1bfcdcce66c75c12c14014f776c17f8ddb517c51e506",
+      "src\\core\\__init__.py": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "src\\db\\migrations.py": "b71e7c9604482b4e72c4ea8b59b1dbd7713d38b92d530a73b5480dbafa37bf0b",
+      "src\\db\\models.py": "5ff5920261c94f026a2283ab83436e468e7bff068b1a83ffbe4e5260d3efb2b9",
+      "src\\db\\seed.py": "a6090e2e59b234065b3c9991b7cb5977efad9b1f36c9d0b3c453f6e4c6d7f144",
+      "src\\db\\session.py": "bcd3fc872056fc4338a8a35bb57257a8f2c018e82deee8f4f0fa56abd7645d24",
+      "src\\db\\__init__.py": "c2e6b809ea760b3e01c76795b7901fce74ab701d8a264e75b731652a7118c027",
+      "src\\evaluation\\metrics.py": "e2d21fca59eac7eb265460215c7e3757ce8ee21901e24c64b27167871620845c",
+      "src\\evaluation\\__init__.py": "f854760655f13fbd6966f5522566befdb281c44249f0c1ea70f2ed88df9e4eb9",
+      "src\\services\\authentication.py": "1b4200c2f3adab9d99988e9c6daf175bb7143241e26c27ed6c89d81afe0aca4b",
+      "src\\services\\history.py": "f2b21bdca5968cf56a3523b7edce5239affab06bf16619ac5539bdbe89028f13",
+      "src\\services\\image_recognition.py": "90a7382d098cf68a3a856f85ff30e7b7fa3536c032ee97c5372c9da2e25fab9d",
+      "src\\services\\model_runtime.py": "19b07adf60df298c8633a8059c780023f89d0040b97e88737c1c352eeee123f4",
+      "src\\services\\result_media.py": "9c5a91f66b5c420189f66fd6e43f31bad9c276916c0f69eff73c41e29116b83b",
+      "src\\services\\schemas.py": "b7e1cde1ce5fc69e23a0a77d7b9df928c4cae3cdb9dc3cd83f2bc6e43637ffac",
+      "src\\services\\video_jobs.py": "5498c82b51dee358c82a3ecd6080374e1bd3537d86993c3c232c0ef550b9284b",
+      "src\\services\\__init__.py": "f3c42067e7e394f05fecc8ec11096c94fdbf68866f1706ce573f0cccdeacc1b2",
+      "src\\utils\\logger.py": "b5588de45167f673e4539f088a3836b430df6ee5dd2c69cf73b98c7645e47591",
+      "src\\utils\\visualizer.py": "5ce4edaa41e68bf48ff1c11c3025612e488e40ce440403267f8182aa3f6fdaca",
+      "src\\utils\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src\\core\\image\\character_regions.py": "f5adf6bed03021cd3c353ca6d8cba6f5f6e537f05713dec3ba6fa03f3879882b",
+      "src\\core\\image\\detector.py": "24645599f65989c3d410f44cc5c9c62278b350a8e703277b8657481f48a5cbe6",
+      "src\\core\\image\\plate_regions.py": "8998d4064ed5c7e589358f1e540c2766bc7fa7e99fe596a159d9ceeca91dbecf",
+      "src\\core\\image\\preprocessor.py": "97d1b5026aa25c39993565ddd2424f46130c086737ace5ccf4bf8c0efaec0ccc",
+      "src\\core\\image\\__init__.py": "fd32786fbaddff039c2d41dfa80ad183f79ad7eda7b978a984333387e4372a1b",
+      "src\\core\\integrations\\ninerouter_vision.py": "5573ffa1e5614dd047796659c27e807cc731814ab7bf10648f82c644e7984e32",
+      "src\\core\\integrations\\__init__.py": "b7008ac001c28538e65811f28adf8b19307f6a827bf88fa890b20c94aa264d9e",
+      "src\\core\\ocr\\engine.py": "0b372fefa3b9a00812dea79edcea5b31b642cc680a09f66346607ded49bea76d",
+      "src\\core\\ocr\\line_ocr.py": "0a053573aa72b15a5b69bb2a6586142776dfc1d2f0a5b54fe450d0b92d9a9f92",
+      "src\\core\\ocr\\postprocessor.py": "5e709d38d283c28fd6dd461dd22ff1eeb4544bc2ddf6e2634ad2af53054d6e1c",
+      "src\\core\\ocr\\__init__.py": "b3f2abf99ecb3b154edab983c07977f4405153ce14dceb55599f3fb59c7e2807",
+      "src\\core\\video\\models.py": "75434731c433e41d68780ada59dfefe0735925b3ea71ec05f684d79beaf612ed",
+      "src\\core\\video\\plate_reader.py": "586c3b56dc8a6d07c0fc7b8c8af741cd92b12290e0bc193b6b52ae619e83cf30",
+      "src\\core\\video\\tracker.py": "954f358070fb4850f50682fb55968d26bae3de66da9fb45d1557310dc43b8a85",
+      "src\\core\\video\\__init__.py": "8a52bfa034dac77014e7fcc1668e9ef52b4edc10fefc18888a53d98a32c5edfd"
+    },
+    "cases": [
+      {
+        "id": "motorbike_69B1_77777",
+        "sha256": "ba4af142df9f41c679be7d2f01c6f848117556e54dba1d4a6130e9b462a6d347",
+        "expected": [
+          "69-B1 777.77"
+        ],
+        "wall_ms": 2577.35,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 2576.84,
+          "results": [
+            {
+              "plate_number": "69-B1 777.77",
+              "confidence": 1.0,
+              "plate_type": "two_line",
+              "bbox": [
+                296,
+                212,
+                468,
+                342
+              ],
+              "engine_used": "cct_vn_onnx",
+              "cropped_image_url": "/static/cropped_plates/crop_eb41b8a8c7d345dd97c0df0314ae538c.jpg",
+              "annotated_image_url": "/static/final_results/result_461837de0de942dcb4a6789045453e1e.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      },
+      {
+        "id": "car_30A_11111",
+        "sha256": "77c705badfbcdcda78325e86a604751646f58120252660758cf446156e014852",
+        "expected": [
+          "30A-111.11"
+        ],
+        "wall_ms": 284.03,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 283.56,
+          "results": [
+            {
+              "plate_number": "30A-111.11",
+              "confidence": 0.9986,
+              "plate_type": "one_line",
+              "bbox": [
+                233,
+                422,
+                408,
+                483
+              ],
+              "engine_used": "cct_vn_onnx",
+              "cropped_image_url": "/static/cropped_plates/crop_8946d2f45d1f4240b2ded487d51dcd7c.jpg",
+              "annotated_image_url": "/static/final_results/result_4314bf73d5ee4f05a693a444e878d385.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      },
+      {
+        "id": "car_30A_88888",
+        "sha256": "38ee443a05c34f346a3ff006924b878583cd15b59f1c4b7dec91d7ace96e0d1d",
+        "expected": [
+          "30A-888.88"
+        ],
+        "wall_ms": 309.33,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 308.87,
+          "results": [
+            {
+              "plate_number": "30A-888.88",
+              "confidence": 1.0,
+              "plate_type": "one_line",
+              "bbox": [
+                317,
+                445,
+                513,
+                508
+              ],
+              "engine_used": "cct_vn_onnx",
+              "cropped_image_url": "/static/cropped_plates/crop_d0ed54f451a94814963017dab439770a.jpg",
+              "annotated_image_url": "/static/final_results/result_7d08597d627b448ba5b1f7544eedf9cd.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      }
+    ]
+  },
+  "hard_cases_final": {
+    "source": "data/recognition_regression/20261119T165808_536246Z_hardening_hard_fixed/results.json",
+    "threads": 2,
+    "model_hashes": {
+      "best.pt": "bde8d2007b7517f8237b77459f11a889513d158d7252355576c2b35e6e6a316a",
+      "LP_ocr.pt": "67c1ad8dbe4ad1b138d64b9e31e495e07abfc9d44e7787aed1845dc580473c77",
+      "easyocr/english_g2.pth": "e2272681d9d67a04e2dff396b6e95077bc19001f8f6d3593c307b9852e1c29e8"
+    },
+    "code_hashes": {
+      "src\\config.py": "264b0ae4efc62dbd11694833240a1d87b6bc6718519aadb9585167cffde1f707",
+      "src\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src\\api\\auth.py": "5ce5a955b12b613b97566bd69ca8d2b18b221f6f85039147ea344ace69a392f5",
+      "src\\api\\routes.py": "1843dcc376caa966abb1b99b5ee05a84d29f7b46d221d8b8257dbd07605b6442",
+      "src\\api\\video_routes.py": "c7cf20130801f9896bd3d219134137c87aaae67f3abd4497affddb0f5e1c518a",
+      "src\\api\\__init__.py": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "src\\core\\exceptions.py": "bb3792d3e881ff4feb0d1bfcdcce66c75c12c14014f776c17f8ddb517c51e506",
+      "src\\core\\__init__.py": "7eb70257593da06f682a3ddda54a9d260d4fc514f645237f5ca74b08f8da61a6",
+      "src\\db\\migrations.py": "b71e7c9604482b4e72c4ea8b59b1dbd7713d38b92d530a73b5480dbafa37bf0b",
+      "src\\db\\models.py": "5ff5920261c94f026a2283ab83436e468e7bff068b1a83ffbe4e5260d3efb2b9",
+      "src\\db\\seed.py": "a6090e2e59b234065b3c9991b7cb5977efad9b1f36c9d0b3c453f6e4c6d7f144",
+      "src\\db\\session.py": "bcd3fc872056fc4338a8a35bb57257a8f2c018e82deee8f4f0fa56abd7645d24",
+      "src\\db\\__init__.py": "c2e6b809ea760b3e01c76795b7901fce74ab701d8a264e75b731652a7118c027",
+      "src\\evaluation\\metrics.py": "e2d21fca59eac7eb265460215c7e3757ce8ee21901e24c64b27167871620845c",
+      "src\\evaluation\\__init__.py": "f854760655f13fbd6966f5522566befdb281c44249f0c1ea70f2ed88df9e4eb9",
+      "src\\services\\authentication.py": "1b4200c2f3adab9d99988e9c6daf175bb7143241e26c27ed6c89d81afe0aca4b",
+      "src\\services\\history.py": "f2b21bdca5968cf56a3523b7edce5239affab06bf16619ac5539bdbe89028f13",
+      "src\\services\\image_recognition.py": "d9d2510fef73c66b75d7e53b4eb09f28aef81f87fef35786ab123cdcf822910f",
+      "src\\services\\model_runtime.py": "19b07adf60df298c8633a8059c780023f89d0040b97e88737c1c352eeee123f4",
+      "src\\services\\result_media.py": "9c5a91f66b5c420189f66fd6e43f31bad9c276916c0f69eff73c41e29116b83b",
+      "src\\services\\schemas.py": "b7e1cde1ce5fc69e23a0a77d7b9df928c4cae3cdb9dc3cd83f2bc6e43637ffac",
+      "src\\services\\video_jobs.py": "5498c82b51dee358c82a3ecd6080374e1bd3537d86993c3c232c0ef550b9284b",
+      "src\\services\\__init__.py": "f3c42067e7e394f05fecc8ec11096c94fdbf68866f1706ce573f0cccdeacc1b2",
+      "src\\utils\\logger.py": "b5588de45167f673e4539f088a3836b430df6ee5dd2c69cf73b98c7645e47591",
+      "src\\utils\\visualizer.py": "5ce4edaa41e68bf48ff1c11c3025612e488e40ce440403267f8182aa3f6fdaca",
+      "src\\utils\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src\\core\\image\\character_regions.py": "f5adf6bed03021cd3c353ca6d8cba6f5f6e537f05713dec3ba6fa03f3879882b",
+      "src\\core\\image\\detector.py": "24645599f65989c3d410f44cc5c9c62278b350a8e703277b8657481f48a5cbe6",
+      "src\\core\\image\\plate_regions.py": "8998d4064ed5c7e589358f1e540c2766bc7fa7e99fe596a159d9ceeca91dbecf",
+      "src\\core\\image\\preprocessor.py": "97d1b5026aa25c39993565ddd2424f46130c086737ace5ccf4bf8c0efaec0ccc",
+      "src\\core\\image\\__init__.py": "fd32786fbaddff039c2d41dfa80ad183f79ad7eda7b978a984333387e4372a1b",
+      "src\\core\\integrations\\ninerouter_vision.py": "5573ffa1e5614dd047796659c27e807cc731814ab7bf10648f82c644e7984e32",
+      "src\\core\\integrations\\__init__.py": "b7008ac001c28538e65811f28adf8b19307f6a827bf88fa890b20c94aa264d9e",
+      "src\\core\\ocr\\engine.py": "0b372fefa3b9a00812dea79edcea5b31b642cc680a09f66346607ded49bea76d",
+      "src\\core\\ocr\\line_ocr.py": "0a053573aa72b15a5b69bb2a6586142776dfc1d2f0a5b54fe450d0b92d9a9f92",
+      "src\\core\\ocr\\postprocessor.py": "5e709d38d283c28fd6dd461dd22ff1eeb4544bc2ddf6e2634ad2af53054d6e1c",
+      "src\\core\\ocr\\__init__.py": "b3f2abf99ecb3b154edab983c07977f4405153ce14dceb55599f3fb59c7e2807",
+      "src\\core\\video\\models.py": "75434731c433e41d68780ada59dfefe0735925b3ea71ec05f684d79beaf612ed",
+      "src\\core\\video\\plate_reader.py": "586c3b56dc8a6d07c0fc7b8c8af741cd92b12290e0bc193b6b52ae619e83cf30",
+      "src\\core\\video\\tracker.py": "954f358070fb4850f50682fb55968d26bae3de66da9fb45d1557310dc43b8a85",
+      "src\\core\\video\\__init__.py": "8a52bfa034dac77014e7fcc1668e9ef52b4edc10fefc18888a53d98a32c5edfd"
+    },
+    "cases": [
+      {
+        "id": "01_scratched",
+        "sha256": "3d399fad866697112ddec1c475bab6c9532f8af8f27bb37983f0eb0ec59b8880",
+        "expected": [
+          "30E-736.70"
+        ],
+        "wall_ms": 4037.12,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 4036.48,
+          "results": [
+            {
+              "plate_number": "30E 736.70",
+              "confidence": 0.9116,
+              "plate_type": "two_line",
+              "bbox": [
+                374,
+                302,
+                694,
+                524
+              ],
+              "engine_used": "local_yolo_ocr_fallback",
+              "cropped_image_url": "/static/cropped_plates/crop_0f3b2b0e4cb74b0db464a8b66f153f53.jpg",
+              "annotated_image_url": "/static/final_results/result_731950c708b54425955f8e22f68d99c3.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      },
+      {
+        "id": "02_worn",
+        "sha256": "596fe519771302f66287fc02fc585988a27f726482c352e40b467c7cd6c8639b",
+        "expected": [
+          "75A-103.44"
+        ],
+        "wall_ms": 1748.62,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 1748.11,
+          "results": [
+            {
+              "plate_number": "75A-103.44",
+              "confidence": 0.611,
+              "plate_type": "one_line",
+              "bbox": [
+                275,
+                290,
+                501,
+                341
+              ],
+              "engine_used": "local_yolo_ocr_fallback",
+              "cropped_image_url": "/static/cropped_plates/crop_6b6a6010c047480d91c1ab0c815e82a4.jpg",
+              "annotated_image_url": "/static/final_results/result_32bf5fb6cff14a59838d12acce8ee177.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      },
+      {
+        "id": "03_blue_small",
+        "sha256": "d8272d4c40b55157a96173a00838766beb2ac3e4539f0d7edea381fae2ee64ea",
+        "expected": [
+          "90B-6888"
+        ],
+        "wall_ms": 1271.56,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 1,
+          "processing_time_ms": 1271.13,
+          "results": [
+            {
+              "plate_number": "90B 6888",
+              "confidence": 0.9073,
+              "plate_type": "two_line",
+              "bbox": [
+                167,
+                131,
+                224,
+                192
+              ],
+              "engine_used": "local_yolo",
+              "cropped_image_url": "/static/cropped_plates/crop_2435d27537004e84912f0aa5aa07229f.jpg",
+              "annotated_image_url": "/static/final_results/result_3845857ff9a64a41a89f91ffd9575625.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      },
+      {
+        "id": "04_multiple",
+        "sha256": "5b29bafecd15f0fcb0bc8ebc084614c265488f6a3ccd8cb175a43f1768ed8fa6",
+        "expected": [
+          "48-B1 999.99",
+          "59-G2 777.77",
+          "54-H4 5555",
+          "54-L4 3939"
+        ],
+        "wall_ms": 3436.88,
+        "exact_grouping": true,
+        "response": {
+          "success": true,
+          "message": "Nhận diện biển số thành công",
+          "total_detected": 4,
+          "processing_time_ms": 3436.14,
+          "results": [
+            {
+              "plate_number": "54-L4 3939",
+              "confidence": 0.922,
+              "plate_type": "two_line",
+              "bbox": [
+                1850,
+                890,
+                2000,
+                1026
+              ],
+              "engine_used": "local_yolo",
+              "cropped_image_url": "/static/cropped_plates/crop_49e3134ddce04de19b4b3f0386d0b17d.jpg",
+              "annotated_image_url": "/static/final_results/result_4e43ba36ed464000a7047317ec5ed56f.jpg",
+              "is_valid_format": true
+            },
+            {
+              "plate_number": "48-B1 999.99",
+              "confidence": 0.9337,
+              "plate_type": "two_line",
+              "bbox": [
+                5,
+                989,
+                370,
+                1239
+              ],
+              "engine_used": "local_yolo_ocr_fallback",
+              "cropped_image_url": "/static/cropped_plates/crop_c33b1683b39d4fe58bd9e2a5007dd0bc.jpg",
+              "annotated_image_url": "/static/final_results/result_4e43ba36ed464000a7047317ec5ed56f.jpg",
+              "is_valid_format": true
+            },
+            {
+              "plate_number": "59-G2 777.77",
+              "confidence": 0.9262,
+              "plate_type": "two_line",
+              "bbox": [
+                810,
+                938,
+                1075,
+                1141
+              ],
+              "engine_used": "local_yolo_ocr_fallback",
+              "cropped_image_url": "/static/cropped_plates/crop_649b0bad271d473a92b59c19c288c85d.jpg",
+              "annotated_image_url": "/static/final_results/result_4e43ba36ed464000a7047317ec5ed56f.jpg",
+              "is_valid_format": true
+            },
+            {
+              "plate_number": "54-H4 5555",
+              "confidence": 0.9232,
+              "plate_type": "two_line",
+              "bbox": [
+                1425,
+                912,
+                1601,
+                1092
+              ],
+              "engine_used": "local_yolo_ocr_fallback",
+              "cropped_image_url": "/static/cropped_plates/crop_a474a340f0ca41f9bb97119641014929.jpg",
+              "annotated_image_url": "/static/final_results/result_4e43ba36ed464000a7047317ec5ed56f.jpg",
+              "is_valid_format": true
+            }
+          ],
+          "warnings": [],
+          "cloud_attempts": 0
+        }
+      }
+    ]
+  }
+}

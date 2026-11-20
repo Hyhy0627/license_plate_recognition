@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { AlertCircle, CheckCircle2, Film, LoaderCircle, Play, ScanLine, Upload, Video } from "lucide-react";
 import { RequireAuth } from "../../components/auth-provider";
 import { VideoAnnotations } from "../../components/video-annotations";
@@ -9,6 +9,19 @@ import type { VehicleTrack, VideoFrame, VideoJob, VideoResult } from "../../type
 
 const MAX_BYTES = 100 * 1024 * 1024;
 const ALLOWED = new Set(["mp4", "mov", "avi", "webm"]);
+
+function tracksWithPlates(result: VideoResult): VideoResult {
+  const tracks = result.tracks.filter(track => track.plate_number?.trim());
+  const ids = new Set(tracks.map(track => track.track_id));
+  return {
+    ...result,
+    tracks,
+    frames: result.frames.map(frame => ({
+      ...frame,
+      vehicles: frame.vehicles.filter(vehicle => ids.has(vehicle.track_id)),
+    })),
+  };
+}
 
 function nearestFrame(result: VideoResult, time: number): VideoFrame | null {
   const index = Math.round(time * result.sample_fps);
@@ -39,13 +52,12 @@ function VideoWorkspace() {
   const inputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const pendingSeek = useRef<number | null>(null);
-  const result = job?.result;
+  const jobResult = job?.result;
+  const result = useMemo(() => jobResult && tracksWithPlates(jobResult), [jobResult]);
   const dimensions = result ? { width: result.frame_width, height: result.frame_height } : videoDimensions;
   const playerStyle = dimensions ? { aspectRatio: `${dimensions.width} / ${dimensions.height}`, maxWidth: `${70 * dimensions.width / dimensions.height}vh` } : undefined;
   const sourceUrl = job?.id ? `${API_BASE_URL}/api/video-tracking/jobs/${job.id}/media` : videoUrl;
   const frame = result ? nearestFrame(result, currentTime) : null;
-  const recognized = result?.tracks.filter(track => track.plate_number) ?? [];
-  const unreadable = result?.tracks.filter(track => !track.plate_number) ?? [];
 
   useEffect(() => () => { if (videoUrl) URL.revokeObjectURL(videoUrl); }, [videoUrl]);
   useEffect(() => {
@@ -105,7 +117,7 @@ function VideoWorkspace() {
   function trackButton(track: VehicleTrack) {
     return <button key={track.track_id} type="button" className={`video-track ${selectedTrack === track.track_id ? "selected" : ""}`} onClick={() => seekTo(track.first_seen, track.track_id)}>
       <span className="video-track-id">#{track.track_id}</span>
-      <span className="video-track-main"><strong>{track.plate_number || "Biển chưa đủ rõ"}</strong><small>{track.vehicle_type} · {formatTime(track.first_seen)}–{formatTime(track.last_seen)}</small>
+      <span className="video-track-main"><strong>{track.plate_number}</strong><small>{track.vehicle_type} · {formatTime(track.first_seen)}–{formatTime(track.last_seen)}</small>
         {track.plate_status === "confirmed" && <small className="video-plate-state">Nhiều lượt đọc khớp</small>}
         {track.plate_status === "tentative" && <small className="video-plate-state">Cần đối chiếu hình ảnh</small>}
         {track.plate_status === "needs_review" && <small className="video-plate-state warning">Các lượt đọc khác nhau: {track.plate_candidates?.join(" / ")}</small>}
@@ -146,14 +158,12 @@ function VideoWorkspace() {
       </section>
 
       <aside className="video-card video-results" aria-labelledby="video-results-title">
-        <div className="video-card-head"><div><ScanLine size={18} aria-hidden="true" /><h2 id="video-results-title">Kết quả theo vết</h2></div><span>{result?.tracks.length ?? 0} ID</span></div>
+        <div className="video-card-head"><div><ScanLine size={18} aria-hidden="true" /><h2 id="video-results-title">Kết quả nhận diện biển số</h2></div></div>
         {result ? <>
           {result.processing_seconds !== undefined && <p className="video-result-note">Hoàn tất phân tích trong {result.processing_seconds.toFixed(1)} giây.</p>}
-          <div className="video-stats"><div><strong>{result.tracks.length}</strong><span>ID theo vết</span></div><div><strong>{recognized.length}</strong><span>Biển gợi ý</span></div><div><strong>{formatTime(result.duration)}</strong><span>Thời lượng</span></div></div>
-          {result.tracks.length ? <div className="video-track-list">
-            {recognized.length ? recognized.map(trackButton) : <p className="video-list-note">Chưa có biển đủ rõ để đọc. Bạn vẫn có thể xem các ID đã theo vết bên dưới.</p>}
-            {unreadable.length > 0 && <details className="video-unreadable"><summary>{unreadable.length} ID chưa đọc được biển</summary>{unreadable.map(trackButton)}</details>}
-          </div> : <p className="video-results-empty">Chưa phát hiện phương tiện trong video này. Hãy thử góc quay rõ hơn.</p>}
+          <div className="video-stats"><div><strong>{result.tracks.length}</strong><span>ID có biển số</span></div><div><strong>{formatTime(result.duration)}</strong><span>Thời lượng</span></div></div>
+          {result.tracks.length ? <div className="video-track-list">{result.tracks.map(trackButton)}</div>
+            : <p className="video-results-empty">Chưa đọc được biển số nào trong video này. Hãy thử video có biển số rõ hơn.</p>}
           {result.ninerouter?.status === "available" && <p className="video-result-note">9Router đã kiểm tra {result.ninerouter.attempts} ID chưa đọc được và đọc thêm {result.ninerouter.recognized} biển.</p>}
           {result.ninerouter?.status === "unavailable" && <p className="video-result-note">9Router chưa kết nối; video chỉ dùng OCR cục bộ.</p>}
           {result.ninerouter?.status === "disabled" && <p className="video-result-note">9Router chưa được bật trong cấu hình OCR.</p>}

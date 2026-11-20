@@ -8,10 +8,11 @@ import cv2
 import numpy as np
 from fastapi import UploadFile
 
-from src.core.postprocessor import PlatePostprocessor as P
-from src.core.ocr_engine import PlateOCREngine
-from src.core.ninerouter_vision import NineRouterVisionClient
+from src.core.ocr.postprocessor import PlatePostprocessor as P
+from src.core.ocr.engine import PlateOCREngine
+from src.core.integrations.ninerouter_vision import NineRouterVisionClient
 from src.api import routes
+from src.services import image_recognition
 from src.config import settings
 
 
@@ -68,7 +69,7 @@ class CloudBudgetTests(unittest.TestCase):
         ocr.recognize_local_yolo.return_value = {"raw_text": "", "avg_conf": 0}
         original = settings.FINAL_RESULTS_DIR
         try:
-            with tempfile.TemporaryDirectory() as directory, patch.object(routes, "get_detector", return_value=detector), patch.object(routes, "get_ocr_engine", return_value=ocr):
+            with tempfile.TemporaryDirectory() as directory, patch.object(image_recognition, "get_detector", return_value=detector), patch.object(image_recognition, "get_ocr_engine", return_value=ocr):
                 settings.FINAL_RESULTS_DIR = directory
                 response = routes.detect_license_plate(upload, MagicMock(), SimpleNamespace(id=1))
         finally:

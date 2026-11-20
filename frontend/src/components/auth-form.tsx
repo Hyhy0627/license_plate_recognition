@@ -44,7 +44,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
 
       // Reload once so the auth provider and protected pages read the new cookie.
       const next = new URLSearchParams(window.location.search).get("next");
-      window.location.replace(next === "/history" ? "/history" : "/");
+      window.location.replace(next === "/history" || next === "/video" ? next : "/");
     } catch (reason) {
       setError(reason instanceof TypeError ? "Không kết nối được máy chủ. Vui lòng thử lại sau." : reason instanceof Error ? reason.message : "Có lỗi xảy ra. Vui lòng thử lại.");
       setBusy(false);

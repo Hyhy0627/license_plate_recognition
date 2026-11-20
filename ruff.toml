@@ -1,0 +1,6 @@
+# Keep the documented CI correctness checks reproducible without inheriting
+# a developer's global Ruff configuration. Style cleanup is a separate change.
+target-version = "py311"
+
+[lint]
+select = ["E9", "F63", "F7", "F82"]

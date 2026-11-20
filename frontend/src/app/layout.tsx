@@ -4,6 +4,7 @@ import "./globals.css";
 import "./auth.css";
 import "./auth-pixel.css";
 import "./workspace-pixel.css";
+import "./video/video.css";
 import AppFrame from "../components/app-frame";
 import { AuthProvider } from "../components/auth-provider";
 import { Suspense } from "react";

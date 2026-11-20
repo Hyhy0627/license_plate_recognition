@@ -68,7 +68,7 @@ Tạo thư mục ảnh, ví dụ `data/my_test_set/`, và manifest `data/my_test
 .\venv\Scripts\python.exe scripts/check_regression.py --label local_before --mode local --cases data/my_test_set/cases.json
 ```
 
-Công cụ gọi trực tiếp handler API, sử dụng database và thư mục ảnh đầu ra riêng cho từng lượt. Bằng chứng nằm trong `data/recognition_regression/<run-id>/`, gồm manifest, hash ảnh, nhãn đối chứng và phản hồi nhận diện.
+Công cụ gọi trực tiếp service ảnh dùng chung với API, sử dụng database và thư mục ảnh đầu ra riêng cho từng lượt. Bằng chứng nằm trong `data/recognition_regression/<run-id>/`, gồm manifest, hash ảnh, nhãn đối chứng và phản hồi nhận diện.
 
 Sau khi sửa nhận diện, chạy lại với cùng ảnh, cùng nhãn và đổi nhãn thành `local_after`. Dùng `--mode hybrid` để đánh giá riêng chế độ có dịch vụ Vision. Không gộp kết quả local/hybrid hoặc sửa nhãn để khớp dự đoán.
 
@@ -110,4 +110,8 @@ Ghi lệnh, ngày chạy, phiên bản/cấu hình và tổng pass/fail/skip t�
 
 Khi cần tái hiện lượt kiểm tra không dùng plugin pytest ngoài, đặt `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1` trong môi trường của tiến trình kiểm tra và ghi rõ lựa chọn này; đây không phải cấu hình mặc định của runner tổng hợp. `pytest.ini` đặt `testpaths=tests` và loại archive/handoff khỏi discovery; cả `pytest` và `pytest tests` đều nhắm vào bộ test đang hoạt động. Các bản sao cục bộ không được coi là test bổ sung.
 
-Các kiểm thử TestClient cần dependency HTTP client tương thích với Starlette đang cài. Việc dependency đã có trên máy phát triển không chứng minh một môi trường mới đã đầy đủ. Kết quả test phần mềm, benchmark local và đánh giá có cloud phải được báo cáo riêng.
+Môi trường phát triển/CI cài `python -m pip install -r requirements-dev.txt` để có HTTPX cho TestClient và Ruff. Chạy `python -m ruff check main.py src scripts tests --select E9,F63,F7,F82` để kiểm tra lỗi cú pháp và tên không xác định; đây không phải kiểm tra toàn bộ quy tắc định dạng. CI còn chạy pytest và lint/typecheck/build frontend. Việc dependency đã có trên máy phát triển không chứng minh một môi trường mới đã đầy đủ. Kết quả test phần mềm, benchmark local và đánh giá có cloud phải được báo cáo riêng.
+
+Kết quả kiểm thử và benchmark mới nhất, lệnh tái hiện và các phần chưa đo: [giai đoạn 5](../docs/results/evaluation.md). Workflow GitHub chỉ chạy trên máy chủ sau khi push/PR; kết quả chạy cục bộ không được gọi là CI đã xanh.
+
+Kết quả tái cấu trúc core/services và đối chiếu OpenAPI/benchmark local giới hạn xem [báo cáo giai đoạn 4](../docs/results/service_refactor.md). Các mock được đặt tại service/factory mới; assertion về endpoint và quyền dữ liệu được giữ nguyên.

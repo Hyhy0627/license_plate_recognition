@@ -1,0 +1,445 @@
+{
+  "date": "2026-11-19",
+  "timezone": "Asia/Bangkok",
+  "scope": "Stage 4 modular refactor; 2-image synthetic local smoke comparison, not a real-traffic accuracy benchmark",
+  "openapi_unchanged": true,
+  "baseline_openapi_sha256": "74f507246b92af71034a0d0e5c40b2a6337c12ede69836e5242134cd28adfc56",
+  "algorithm_ast_checks": {
+    "core_and_schema_files_equivalent": [
+      [
+        "src/core/detector.py",
+        "src/core/image/detector.py"
+      ],
+      [
+        "src/core/preprocessor.py",
+        "src/core/image/preprocessor.py"
+      ],
+      [
+        "src/core/plate_regions.py",
+        "src/core/image/plate_regions.py"
+      ],
+      [
+        "src/core/ocr_engine.py",
+        "src/core/ocr/engine.py"
+      ],
+      [
+        "src/core/line_ocr.py",
+        "src/core/ocr/line_ocr.py"
+      ],
+      [
+        "src/core/postprocessor.py",
+        "src/core/ocr/postprocessor.py"
+      ],
+      [
+        "src/core/ninerouter_vision.py",
+        "src/core/integrations/ninerouter_vision.py"
+      ],
+      [
+        "src/core/plate_reader.py",
+        "src/core/video/plate_reader.py"
+      ],
+      [
+        "src/core/video_tracker.py",
+        "src/core/video/tracker.py"
+      ],
+      [
+        "src/api/schemas.py",
+        "src/services/schemas.py"
+      ]
+    ],
+    "video_model_classes_equivalent": true,
+    "image_pipeline_and_character_regions_equivalent": true,
+    "service_function_bodies_equivalent": 23,
+    "core_services_import_api": false
+  },
+  "additional_checks": {
+    "video_factory_logic_preserved": true,
+    "queue_worker_upload_limits_preserved": true,
+    "auth_validation_classes_preserved": true,
+    "model_cache_and_lock_shared": true
+  },
+  "pytest": {
+    "passed": 93,
+    "warnings": 1,
+    "reported_seconds": 26.4,
+    "plugin_autoload": false,
+    "execution": "outside sandbox"
+  },
+  "benchmark": {
+    "controls": {
+      "scope": "offline_local_detector_yolo_ocr_postprocessor",
+      "dataset_kind": "synthetic",
+      "ground_truth_sha256": "ade028f5de627c18de908d882fbee4181646a1cd46fa5f7a0eff835d363df3fb",
+      "dataset_images_total": 40,
+      "evaluated_images": 2,
+      "image_sha256": {
+        "blurred/blur_01.jpg": "c331a69b7b9742d36dbb58eddfcf69ff0ccc1eb8527b823bd972d38649b024fd",
+        "blurred/blur_02.jpg": "ac8594fe5dcc29ca9f77ceb71a1a4cfc4bb7b2c6a52d871a57345db18fd1ca28"
+      },
+      "versions": {
+        "python": "3.13.0",
+        "torch": "2.14.1+cpu",
+        "opencv": "4.10.0",
+        "ultralytics": "8.4.190"
+      },
+      "torch_threads": 2,
+      "device": "cpu",
+      "cloud_enabled": false,
+      "warmup_iterations": 1,
+      "operating_confidence": 0.3,
+      "ap_min_confidence": 0.01,
+      "iou_threshold": 0.5
+    },
+    "model_sha256": {
+      "detector_weights": "bde8d2007b7517f8237b77459f11a889513d158d7252355576c2b35e6e6a316a",
+      "ocr_weights": "67c1ad8dbe4ad1b138d64b9e31e495e07abfc9d44e7787aed1845dc580473c77"
+    },
+    "prediction_records_equal_excluding_timing": true,
+    "quality_metrics_equal": true,
+    "prediction_records_excluding_timing": [
+      {
+        "file": "blurred/blur_01.jpg",
+        "category": "blurred",
+        "truth": [
+          {
+            "bbox": [
+              260.0,
+              230.0,
+              540.0,
+              430.0
+            ],
+            "text": "80A00538"
+          }
+        ],
+        "detections": [],
+        "candidates": [],
+        "predictions": [],
+        "oracle": [
+          {
+            "bbox": [
+              260.0,
+              230.0,
+              540.0,
+              430.0
+            ],
+            "score": 1.0,
+            "raw_text": "6",
+            "text": "6",
+            "valid_format": false,
+            "ocr_confidence": 0.2186356484889984,
+            "engine": "local_yolo"
+          }
+        ]
+      },
+      {
+        "file": "blurred/blur_02.jpg",
+        "category": "blurred",
+        "truth": [
+          {
+            "bbox": [
+              265.0,
+              235.0,
+              535.0,
+              425.0
+            ],
+            "text": "90B6888"
+          }
+        ],
+        "detections": [],
+        "candidates": [],
+        "predictions": [],
+        "oracle": [
+          {
+            "bbox": [
+              265.0,
+              235.0,
+              535.0,
+              425.0
+            ],
+            "score": 1.0,
+            "raw_text": "0",
+            "text": "0",
+            "valid_format": false,
+            "ocr_confidence": 0.5466781258583069,
+            "engine": "local_yolo"
+          }
+        ]
+      }
+    ],
+    "runs": [
+      {
+        "label": "before",
+        "run_id": "20261119T101504_205708Z",
+        "raw_evidence_directory": "data/benchmarks/stage4_before/20261119T101504_205708Z",
+        "overall": {
+          "images": 2,
+          "detection": {
+            "ground_truth_plates": 2,
+            "tp": 0,
+            "fp": 0,
+            "fn": 2,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "ap50": 0.0,
+            "mean_iou_matched": null,
+            "mean_iou_including_misses": 0.0,
+            "score_threshold": 0.3,
+            "iou_threshold": 0.5,
+            "ap_interpolation": "101 recall points, precision envelope",
+            "pr_curve": []
+          },
+          "local_end_to_end": {
+            "ground_truth_plates": 2,
+            "predicted_plates": 0,
+            "exact_plate_matches": 0,
+            "extra_localizations": 0,
+            "exact_plate_recall": 0.0,
+            "exact_plate_precision": 0.0,
+            "exact_image_accuracy": 0.0,
+            "edit_errors": 15,
+            "ground_truth_characters": 15,
+            "cer": 1.0
+          },
+          "ground_truth_crop_ocr_raw": {
+            "ground_truth_plates": 2,
+            "predicted_plates": 2,
+            "exact_plate_matches": 0,
+            "extra_localizations": 0,
+            "exact_plate_recall": 0.0,
+            "exact_plate_precision": 0.0,
+            "exact_image_accuracy": 0.0,
+            "edit_errors": 14,
+            "ground_truth_characters": 15,
+            "cer": 0.9333333333333333
+          },
+          "ground_truth_crop_ocr_formatted": {
+            "ground_truth_plates": 2,
+            "predicted_plates": 2,
+            "exact_plate_matches": 0,
+            "extra_localizations": 0,
+            "exact_plate_recall": 0.0,
+            "exact_plate_precision": 0.0,
+            "exact_image_accuracy": 0.0,
+            "edit_errors": 14,
+            "ground_truth_characters": 15,
+            "cer": 0.9333333333333333
+          },
+          "timing": {
+            "detection": {
+              "count": 2,
+              "mean_ms": 505.6474499997421,
+              "p50_ms": 505.6474499997421,
+              "p95_ms": 510.447194999324
+            },
+            "predicted_crop_ocr_and_postprocessing": {
+              "count": 2,
+              "mean_ms": 0.0019000017346115783,
+              "p50_ms": 0.0019000017346115783,
+              "p95_ms": 0.0019900007828255184
+            },
+            "pipeline": {
+              "count": 2,
+              "mean_ms": 505.6493500014767,
+              "p50_ms": 505.6493500014767,
+              "p95_ms": 510.4490050020104
+            },
+            "gt_crop_ocr": {
+              "count": 2,
+              "mean_ms": 1053.0242000004364,
+              "p50_ms": 1053.0242000004364,
+              "p95_ms": 1057.6683800007231
+            }
+          }
+        }
+      },
+      {
+        "label": "after_concurrent_tests",
+        "run_id": "20261119T102157_862867Z",
+        "raw_evidence_directory": "data/benchmarks/stage4_after/20261119T102157_862867Z",
+        "overall": {
+          "images": 2,
+          "detection": {
+            "ground_truth_plates": 2,
+            "tp": 0,
+            "fp": 0,
+            "fn": 2,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "ap50": 0.0,
+            "mean_iou_matched": null,
+            "mean_iou_including_misses": 0.0,
+            "score_threshold": 0.3,
+            "iou_threshold": 0.5,
+            "ap_interpolation": "101 recall points, precision envelope",
+            "pr_curve": []
+          },
+          "local_end_to_end": {
+            "ground_truth_plates": 2,
+            "predicted_plates": 0,
+            "exact_plate_matches": 0,
+            "extra_localizations": 0,
+            "exact_plate_recall": 0.0,
+            "exact_plate_precision": 0.0,
+            "exact_image_accuracy": 0.0,
+            "edit_errors": 15,
+            "ground_truth_characters": 15,
+            "cer": 1.0
+          },
+          "ground_truth_crop_ocr_raw": {
+            "ground_truth_plates": 2,
+            "predicted_plates": 2,
+            "exact_plate_matches": 0,
+            "extra_localizations": 0,
+            "exact_plate_recall": 0.0,
+            "exact_plate_precision": 0.0,
+            "exact_image_accuracy": 0.0,
+            "edit_errors": 14,
+            "ground_truth_characters": 15,
+            "cer": 0.9333333333333333
+          },
+          "ground_truth_crop_ocr_formatted": {
+            "ground_truth_plates": 2,
+            "predicted_plates": 2,
+            "exact_plate_matches": 0,
+            "extra_localizations": 0,
+            "exact_plate_recall": 0.0,
+            "exact_plate_precision": 0.0,
+            "exact_image_accuracy": 0.0,
+            "edit_errors": 14,
+            "ground_truth_characters": 15,
+            "cer": 0.9333333333333333
+          },
+          "timing": {
+            "detection": {
+              "count": 2,
+              "mean_ms": 656.7820499985828,
+              "p50_ms": 656.7820499985828,
+              "p95_ms": 669.376244999512
+            },
+            "predicted_crop_ocr_and_postprocessing": {
+              "count": 2,
+              "mean_ms": 0.0021500018192455173,
+              "p50_ms": 0.0021500018192455173,
+              "p95_ms": 0.0024650009436300024
+            },
+            "pipeline": {
+              "count": 2,
+              "mean_ms": 656.784200000402,
+              "p50_ms": 656.784200000402,
+              "p95_ms": 669.3787100004556
+            },
+            "gt_crop_ocr": {
+              "count": 2,
+              "mean_ms": 1305.8529999998427,
+              "p50_ms": 1305.8529999998427,
+              "p95_ms": 1413.831040000332
+            }
+          }
+        }
+      },
+      {
+        "label": "after_without_concurrent_tests",
+        "run_id": "20261119T102523_013778Z",
+        "raw_evidence_directory": "data/benchmarks/stage4_after_isolated/20261119T102523_013778Z",
+        "overall": {
+          "images": 2,
+          "detection": {
+            "ground_truth_plates": 2,
+            "tp": 0,
+            "fp": 0,
+            "fn": 2,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "ap50": 0.0,
+            "mean_iou_matched": null,
+            "mean_iou_including_misses": 0.0,
+            "score_threshold": 0.3,
+            "iou_threshold": 0.5,
+            "ap_interpolation": "101 recall points, precision envelope",
+            "pr_curve": []
+          },
+          "local_end_to_end": {
+            "ground_truth_plates": 2,
+            "predicted_plates": 0,
+            "exact_plate_matches": 0,
+            "extra_localizations": 0,
+            "exact_plate_recall": 0.0,
+            "exact_plate_precision": 0.0,
+            "exact_image_accuracy": 0.0,
+            "edit_errors": 15,
+            "ground_truth_characters": 15,
+            "cer": 1.0
+          },
+          "ground_truth_crop_ocr_raw": {
+            "ground_truth_plates": 2,
+            "predicted_plates": 2,
+            "exact_plate_matches": 0,
+            "extra_localizations": 0,
+            "exact_plate_recall": 0.0,
+            "exact_plate_precision": 0.0,
+            "exact_image_accuracy": 0.0,
+            "edit_errors": 14,
+            "ground_truth_characters": 15,
+            "cer": 0.9333333333333333
+          },
+          "ground_truth_crop_ocr_formatted": {
+            "ground_truth_plates": 2,
+            "predicted_plates": 2,
+            "exact_plate_matches": 0,
+            "extra_localizations": 0,
+            "exact_plate_recall": 0.0,
+            "exact_plate_precision": 0.0,
+            "exact_image_accuracy": 0.0,
+            "edit_errors": 14,
+            "ground_truth_characters": 15,
+            "cer": 0.9333333333333333
+          },
+          "timing": {
+            "detection": {
+              "count": 2,
+              "mean_ms": 529.5687500001804,
+              "p50_ms": 529.5687500001804,
+              "p95_ms": 555.7217150028009
+            },
+            "predicted_crop_ocr_and_postprocessing": {
+              "count": 2,
+              "mean_ms": 0.0019500002963468432,
+              "p50_ms": 0.0019500002963468432,
+              "p95_ms": 0.002084998050122522
+            },
+            "pipeline": {
+              "count": 2,
+              "mean_ms": 529.5707000004768,
+              "p50_ms": 529.5707000004768,
+              "p95_ms": 555.723800000851
+            },
+            "gt_crop_ocr": {
+              "count": 2,
+              "mean_ms": 1067.0315500010474,
+              "p50_ms": 1067.0315500010474,
+              "p95_ms": 1124.435395000728
+            }
+          }
+        }
+      }
+    ],
+    "limitations": [
+      "Only two synthetic blurred images; both produce no accepted detections.",
+      "The first after run overlapped pytest and is not a fair latency comparison.",
+      "The isolated after run has no concurrent pytest; one run per condition is insufficient to establish a speed regression or improvement.",
+      "Full API fallbacks, cloud, HTTP, database and video tracking are outside this benchmark."
+    ]
+  },
+  "canonical_openapi_sha256": "d5aea5a73142ecabd21928ae798e551dea09f48fd8ebb553ee10e6cb92aad9d8",
+  "final_checks": {
+    "documentation_files": 18,
+    "valid_local_links": 103,
+    "head_unchanged": true,
+    "index_empty": true,
+    "user_database_env_model_checksums_unchanged": true,
+    "setup_yaml_checksum_valid": true
+  }
+}

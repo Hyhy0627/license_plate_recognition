@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from src.api.auth import Registration, hash_password
+from src.services.authentication import Registration, hash_password
 from src.db.models import User
 
 

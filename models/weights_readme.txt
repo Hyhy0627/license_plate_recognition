@@ -19,7 +19,7 @@ Video — cần khi phân tích video:
 Cài hai trọng số biển video và cấu hình đi kèm:
     .\venv\Scripts\python.exe scripts/setup_video_models.py
 Script kiểm tra SHA256, tải trọng số thiếu/sai checksum và sao chép cấu hình
-đã lưu tại src/core/video_ocr.yaml. Script không cài yolov8n.pt; cần cung cấp
+đã lưu tại src/core/video/video_ocr.yaml. Script không cài yolov8n.pt; cần cung cấp
 riêng file phương tiện đó. Nguồn/các thay đổi tích hợp: docs/video_onnx.md (mục Nguồn mã và model).
 
 EasyOCR dòng dự phòng (tùy chọn):

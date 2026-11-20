@@ -45,5 +45,7 @@ export interface DetectionHistoryResponse {
 export interface SearchPlatesResponse {
   total: number;
   query: string;
+  page: number;
+  page_size: number;
   results: DetectionHistoryItem[];
 }

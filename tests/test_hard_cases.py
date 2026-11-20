@@ -12,12 +12,13 @@ import torch
 from fastapi import UploadFile
 
 from src.api import routes
+from src.services import image_recognition
 from src.config import settings
-from src.core.detector import LicensePlateDetector
-from src.core.line_ocr import LocalLineOCR
-from src.core.ocr_engine import PlateOCREngine
-from src.core.plate_regions import quadrilateral_plate_regions
-from src.core.postprocessor import PlatePostprocessor as P
+from src.core.image.detector import LicensePlateDetector
+from src.core.ocr.line_ocr import LocalLineOCR
+from src.core.ocr.engine import PlateOCREngine
+from src.core.image.plate_regions import quadrilateral_plate_regions
+from src.core.ocr.postprocessor import PlatePostprocessor as P
 
 
 class HardCaseTests(unittest.TestCase):
@@ -99,7 +100,7 @@ class HardCaseTests(unittest.TestCase):
         try:
             with tempfile.TemporaryDirectory() as directory:
                 settings.CROPPED_PLATES_DIR = settings.FINAL_RESULTS_DIR = directory
-                with patch.object(routes, 'get_detector', return_value=detector), patch.object(routes, 'get_ocr_engine', return_value=ocr), patch.object(routes, '_ocr_character_regions', return_value=[{'bbox': [40, 30, 250, 75], 'confidence': .85}]):
+                with patch.object(image_recognition, 'get_detector', return_value=detector), patch.object(image_recognition, 'get_ocr_engine', return_value=ocr), patch.object(image_recognition, '_ocr_character_regions', return_value=[{'bbox': [40, 30, 250, 75], 'confidence': .85}]):
                     response = routes.detect_license_plate(upload, MagicMock(), SimpleNamespace(id=1))
         finally:
             settings.CROPPED_PLATES_DIR, settings.FINAL_RESULTS_DIR = old_crop, old_final

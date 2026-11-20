@@ -42,7 +42,7 @@ finally {
 }
 ```
 
-Script dùng cùng schema validation và hàm băm với API đăng ký. Nó tạo một người dùng trong transaction, không tạo phiên/cookie và không cấp quyền quản trị. Nếu email đã tồn tại, script giữ nguyên tên, mật khẩu và dữ liệu của tài khoản; chạy lại không phải là thao tác reset mật khẩu. Không có tùy chọn ghi đè hoặc sửa hàng loạt.
+Script dùng cùng schema validation và hàm băm tại `src/services/authentication.py` với API đăng ký. `src/api/auth.py` chỉ giữ HTTP adapter và dependency; policy xác thực nằm trong service. Nó tạo một người dùng trong transaction, không tạo phiên/cookie và không cấp quyền quản trị. Nếu email đã tồn tại, script giữ nguyên tên, mật khẩu và dữ liệu của tài khoản; chạy lại không phải là thao tác reset mật khẩu. Không có tùy chọn ghi đè hoặc sửa hàng loạt.
 
 Mã thoát: `0` khi tạo thành công hoặc tài khoản đã có, `2` khi thiếu/sai cấu hình seed, `1` khi cấu hình ứng dụng/database không hợp lệ hoặc thao tác DB thất bại. Output không in mật khẩu, hash hoặc chi tiết exception DB. Thiếu cấu hình seed được phát hiện trước khi tạo schema/tài khoản.
 

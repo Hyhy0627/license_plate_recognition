@@ -24,9 +24,9 @@ const pixelComets = Array.from({ length: pixelCometCount }, (_, index) => ({
 }));
 
 const SCAN_STEPS = [
-  "YOLOv8 đang phát hiện tọa độ biển số xe…",
-  "Đang nắn góc nghiêng & tối ưu ảnh cắt…",
-  "OCR đang đọc ký tự & đối chiếu quy chuẩn Việt Nam…",
+  "Đang phân tích ảnh phương tiện…",
+  "Đang xử lý yêu cầu nhận diện…",
+  "Kết quả sẽ hiển thị sau khi phân tích xong…",
 ];
 
 export default function Home() {
@@ -108,7 +108,7 @@ function RecognitionWorkspace() {
 
   return <div className="recognition-page">
     <section className="page-heading">
-      <div><span className="eyebrow"><span /> NHẬN DIỆN THÔNG MINH</span><h1>Mỗi biển số.<br className="mobile-break" /> <span className="heading-accent">Một cái nhìn rõ ràng.</span></h1><p>Tải ảnh phương tiện, nhận diện biển số và lưu lại kết quả trong một không gian.</p></div>
+      <div><span className="eyebrow"><span /> Phân tích hình ảnh</span><h1>Nhận diện biển số</h1><p>Tải ảnh phương tiện để đọc biển số, đối chiếu ảnh và lưu kết quả.</p></div>
       <Link href="/history" className="history-shortcut"><History size={16} aria-hidden="true" /> Xem lịch sử <ArrowUpRight size={15} aria-hidden="true" /></Link>
     </section>
 
@@ -142,7 +142,7 @@ function RecognitionWorkspace() {
                 <span className="pixel-target-bracket br" />
                 <div className="pixel-scan-hud">
                   <span className="pixel-hud-pill">
-                    <span className="pixel-pulse-dot" /> AI LIVE SCANNING // PLATESIGHT
+                    <span className="pixel-pulse-dot" /> Đang phân tích ảnh
                   </span>
                   <p className="pixel-hud-step">{SCAN_STEPS[scanStepIndex]}</p>
                 </div>
@@ -171,7 +171,7 @@ function RecognitionWorkspace() {
               </div>
             </div>
             <h3>Tải ảnh phương tiện</h3>
-            <p>Kéo thả tệp vào đây hoặc bấm <strong>Ctrl + V</strong> để nhận diện ngay</p>
+            <p>Kéo thả ảnh hoặc bấm <strong>Ctrl + V</strong> để nhận diện</p>
             <button className="primary-button upload-cta" onClick={() => fileInputRef.current?.click()}><Upload size={17} aria-hidden="true" /> Chọn hình ảnh <ArrowRight size={16} aria-hidden="true" /></button><span className="upload-limit">JPG, PNG hoặc WEBP · Tối đa 10 MB</span>
           </div>}
 
@@ -232,12 +232,12 @@ function RecognitionWorkspace() {
             </div>
 
             <Link href="/history" className="saved-note"><Check size={14} aria-hidden="true" /> Kết quả đã được lưu tự động trong lịch sử <ArrowUpRight size={13} aria-hidden="true" /></Link>
-          </> : <div className="result-empty"><div className="empty-result-symbol"><ScanLine size={30} aria-hidden="true" /><span className="empty-result-line" /></div><h3>{isLoading ? "Kết quả đang được chuẩn bị" : detectionResponse ? "Chưa đọc được biển số" : "Sẵn sàng cho ảnh đầu tiên"}</h3><p>{isLoading ? "Hệ thống đang truy quét vùng biển số, nhận dạng ký tự và giải mã tỉnh thành." : detectionResponse ? "Hãy thử ảnh chụp gần hơn, đủ sáng và nhìn rõ toàn bộ biển số." : "Tải ảnh phương tiện hoặc bấm Ctrl+V để xem biển số mô phỏng, tra cứu địa phương và thông số phân tích."}</p><div className="empty-data-rows"><span>Biển số nhận diện <i>—</i></span><span>Độ tin cậy <i>—</i></span><span>Thời gian xử lý <i>—</i></span></div>{detectionResponse && <button className="secondary-button" onClick={() => fileInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" /> Chọn ảnh khác</button>}</div>}
+          </> : <div className="result-empty"><div className="empty-result-symbol"><ScanLine size={30} aria-hidden="true" /><span className="empty-result-line" /></div><h3>{isLoading ? "Kết quả đang được chuẩn bị" : detectionResponse ? "Chưa đọc được biển số" : "Chưa có kết quả"}</h3><p>{isLoading ? "Hệ thống đang truy quét vùng biển số, nhận dạng ký tự và giải mã tỉnh thành." : detectionResponse ? "Hãy thử ảnh chụp gần hơn, đủ sáng và nhìn rõ toàn bộ biển số." : "Tải ảnh hoặc dán bằng Ctrl+V. Biển số, ảnh đối chiếu và thông tin địa phương sẽ hiển thị tại đây."}</p><div className="empty-data-rows"><span>Biển số nhận diện <i>—</i></span><span>Độ tin cậy <i>—</i></span><span>Thời gian xử lý <i>—</i></span></div>{detectionResponse && <button className="secondary-button" onClick={() => fileInputRef.current?.click()}><ImagePlus size={16} aria-hidden="true" /> Chọn ảnh khác</button>}</div>}
         </div>
       </aside>
     </section>
 
-    <section className="how-it-works" aria-label="Hướng dẫn nhận diện"><div className="guide-intro"><span className="eyebrow">ĐƠN GIẢN TRONG 3 BƯỚC</span><h2>Từ hình ảnh<br /> đến thông tin.</h2></div>{[{ number: "01", icon: Upload, title: "Tải ảnh phương tiện", text: "Chọn ảnh rõ nét, nhìn thấy toàn bộ biển số hoặc dán Ctrl+V." }, { number: "02", icon: Focus, title: "Tự động nhận diện", text: "Hệ thống tìm vùng biển, đọc ký tự và giải mã tỉnh thành." }, { number: "03", icon: History, title: "Xem và lưu kết quả", text: "Đối chiếu biển số thực tế và tra cứu lại trong lịch sử." }].map(({ number, icon: Icon, title, text }) => <div className="guide-step" key={number}><div><Icon size={20} aria-hidden="true" /><span>{number}</span></div><h3>{title}</h3><p>{text}</p></div>)}</section>
+    <section className="how-it-works" aria-label="Hướng dẫn nhận diện"><div className="guide-intro"><span className="eyebrow">Cách sử dụng</span><h2>Từ ảnh đến<br /> kết quả</h2></div>{[{ number: "01", icon: Upload, title: "Tải ảnh phương tiện", text: "Chọn ảnh rõ nét hoặc kéo thả, dán bằng Ctrl+V" }, { number: "02", icon: Focus, title: "Tự động nhận diện", text: "Hệ thống tìm biển số và đọc các ký tự trong ảnh" }, { number: "03", icon: History, title: "Xem và lưu kết quả", text: "Đối chiếu ảnh gốc và xem lại kết quả trong lịch sử" }].map(({ number, icon: Icon, title, text }) => <div className="guide-step" key={number}><div><Icon size={20} aria-hidden="true" /><span>{number}</span></div><h3>{title}</h3><p>{text}</p></div>)}</section>
     <div className="quality-tip"><ShieldCheck size={17} aria-hidden="true" /><p><strong>Mẹo cho kết quả tốt hơn</strong> Dùng ảnh đủ sáng, hạn chế rung mờ và tránh che khuất ký tự trên biển số.</p></div>
   </div>;
 }

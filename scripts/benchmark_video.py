@@ -10,7 +10,7 @@ import time
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.config import settings
-from src.core.video_tracker import process_video
+from src.core.video.tracker import process_video
 
 
 def main():
@@ -24,12 +24,12 @@ def main():
     torch.set_num_threads(max(1, settings.INFERENCE_THREADS))
     started = time.perf_counter()
     if args.engine == "onnx":
-        from src.core.video_models import get_video_engines
+        from src.services.model_runtime import get_video_engines
         settings.VIDEO_ENGINE = "onnx"
         detector, ocr = get_video_engines()
     else:
-        from src.core.detector import LicensePlateDetector
-        from src.core.ocr_engine import PlateOCREngine
+        from src.core.image.detector import LicensePlateDetector
+        from src.core.ocr.engine import PlateOCREngine
         detector = LicensePlateDetector(settings.YOLO_MODEL_PATH)
         ocr = PlateOCREngine("yolo")
     loaded = time.perf_counter()

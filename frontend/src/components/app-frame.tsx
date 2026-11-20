@@ -12,9 +12,9 @@ export default function AppFrame({ children }: { children: React.ReactNode }) {
   if (pathname === "/login" || pathname === "/register") return <main>{children}</main>;
   return <div className="app-shell">
     <aside className="sidebar">
-      <Link href="/" className="brand"><span className="brand-mark"><ScanLine aria-hidden="true" size={23} /></span><span>PlateSight<span className="brand-sub">NHẬN DIỆN BIỂN SỐ</span></span></Link>
+      <Link href="/" className="brand"><span className="brand-mark"><ScanLine aria-hidden="true" size={23} /></span><span>PlateSight<span className="brand-sub">Nhận diện biển số</span></span></Link>
       <SiteNavigation />
-      <div className="sidebar-note"><span className="mini-label">MỖI HÌNH ẢNH, MỘT KẾT QUẢ</span><p>Nhìn rõ hơn.<br />Quản lý dễ hơn.</p><span>Hệ thống nhận diện biển số Việt Nam</span></div>
+      <div className="sidebar-note"><span className="mini-label">Mỗi hình ảnh, một kết quả</span><p>Nhìn rõ hơn.<br />Quản lý dễ hơn.</p><span>Hệ thống nhận diện biển số Việt Nam</span></div>
     </aside>
     <div className="app-content">
       <header className="topbar">

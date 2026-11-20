@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "id": "motorbike_69B1_77777",
+      "path": "data\\test_real_web\\motorbike_69B1_77777.png",
+      "kind": "existing_web_main_plate",
+      "expected": [
+        "69-B1 777.77"
+      ]
+    },
+    {
+      "id": "car_30A_11111",
+      "path": "data\\test_real_web\\car_30A_11111.jpg",
+      "kind": "existing_web_main_plate",
+      "expected": [
+        "30A-111.11"
+      ]
+    },
+    {
+      "id": "car_30A_88888",
+      "path": "data\\test_real_web\\car_30A_88888.jpg",
+      "kind": "existing_web_main_plate",
+      "expected": [
+        "30A-888.88"
+      ]
+    }
+  ]
+}

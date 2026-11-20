@@ -42,7 +42,7 @@ function HistoryWorkspace() {
     setError(null);
     try {
       const endpoint = plateQuery
-        ? `/api/license-plates/search?plate=${encodeURIComponent(plateQuery)}`
+        ? `/api/license-plates/search?plate=${encodeURIComponent(plateQuery)}&page=${currentPage}&page_size=${PAGE_SIZE}`
         : `/api/license-plates/history?page=${currentPage}&page_size=${PAGE_SIZE}`;
       const response = await apiFetch(endpoint);
       if (!response.ok) throw new Error(`Máy chủ trả về lỗi ${response.status}.`);
@@ -75,9 +75,9 @@ function HistoryWorkspace() {
 
   const rangeLabel = useMemo(() => {
     if (total === 0) return "0 kết quả";
-    if (submittedQuery) return `${items.length} kết quả khớp`;
+    if (submittedQuery) return `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} trong ${total} kết quả khớp`;
     return `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)} trong ${total} bản ghi`;
-  }, [items.length, page, submittedQuery, total]);
+  }, [page, submittedQuery, total]);
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -165,11 +165,11 @@ function HistoryWorkspace() {
         </div>
 
         <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p className="text-xs text-slate-500">{submittedQuery ? `${items.length} kết quả tìm kiếm` : `Trang ${page} / ${totalPages}`}</p>
-          {!submittedQuery && <div className="flex gap-2">
+          <p className="text-xs text-slate-500">Trang {page} / {totalPages}</p>
+          <div className="flex gap-2">
             <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1 || isLoading} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"><ChevronLeft aria-hidden="true" className="h-3.5 w-3.5" /> Trang trước</button>
             <button type="button" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={page >= totalPages || isLoading} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Trang sau <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" /></button>
-          </div>}
+          </div>
         </div>
       </section>
     </div>

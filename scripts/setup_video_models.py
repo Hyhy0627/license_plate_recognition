@@ -29,7 +29,7 @@ def sha256(path):
 
 
 def main():
-    config_bytes = (ROOT / "src/core/video_ocr.yaml").read_bytes().replace(b"\r\n", b"\n")
+    config_bytes = (ROOT / "src/core/video/video_ocr.yaml").read_bytes().replace(b"\r\n", b"\n")
     if hashlib.sha256(config_bytes).hexdigest() != CONFIG_SHA256:
         raise SystemExit("OCR configuration checksum mismatch")
     destination = ROOT / "models/video"

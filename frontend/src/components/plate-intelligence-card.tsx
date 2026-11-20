@@ -20,12 +20,12 @@ export default function PlateIntelligenceCard({
     <div className="plate-intelligence-card" aria-label="Thông tin tra cứu biển số xe Việt Nam">
       <div className="pi-header">
         <div className="pi-title">
-          <Info size={15} className="text-cyan-400" aria-hidden="true" />
-          <h4>Hồ sơ Biển số Việt Nam</h4>
+          <Info size={16} aria-hidden="true" />
+          <h4>Thông tin biển số</h4>
         </div>
         <span className={`pi-badge-status ${meta.isValidFormat && isValidFormat ? "valid" : "warning"}`}>
           <ShieldCheck size={12} aria-hidden="true" />
-          {meta.isValidFormat && isValidFormat ? "Hợp chuẩn Cục CSGT" : "Cần đối chiếu thêm"}
+          {meta.isValidFormat && isValidFormat ? "Đúng định dạng" : "Cần đối chiếu thêm"}
         </span>
       </div>
 
@@ -36,7 +36,7 @@ export default function PlateIntelligenceCard({
             <MapPin size={16} aria-hidden="true" />
           </div>
           <div className="pi-item-content">
-            <span className="pi-item-label">TỈNH / THÀNH PHỐ</span>
+            <span className="pi-item-label">Tỉnh / thành phố</span>
             <strong className="pi-item-value">{meta.provinceName}</strong>
             <small className="pi-item-sub">Mã đầu số: {meta.provinceCode || "—"} · {meta.regionName}</small>
           </div>
@@ -48,7 +48,7 @@ export default function PlateIntelligenceCard({
             <Car size={16} aria-hidden="true" />
           </div>
           <div className="pi-item-content">
-            <span className="pi-item-label">LOẠI PHƯƠNG TIỆN</span>
+            <span className="pi-item-label">Loại phương tiện</span>
             <strong className="pi-item-value">{meta.vehicleCategory}</strong>
             <small className="pi-item-sub">{meta.vehicleDescription}</small>
           </div>
@@ -60,7 +60,7 @@ export default function PlateIntelligenceCard({
             <Tag size={16} aria-hidden="true" />
           </div>
           <div className="pi-item-content">
-            <span className="pi-item-label">QUY CHUẨN MÀU BIỂN</span>
+            <span className="pi-item-label">Màu biển</span>
             <div className="pi-color-pill-row">
               <span className={`pi-color-pill pi-pill-${meta.colorType}`} />
               <strong className="pi-item-value">{meta.colorName}</strong>

@@ -73,7 +73,7 @@ def load_annotations(dataset, ground_truth):
 
 def collect_records(samples, detector, ocr, operating_threshold, warmup):
     import cv2
-    from src.core.postprocessor import PlatePostprocessor
+    from src.core.ocr.postprocessor import PlatePostprocessor
 
     def read_image(sample):
         import numpy as np
@@ -98,6 +98,7 @@ def collect_records(samples, detector, ocr, operating_threshold, warmup):
         return {"bbox": list(bbox), "score": score, "raw_text": raw, "text": text,
                 "valid_format": PlatePostprocessor.validate_plate(text),
                 "ocr_confidence": float(result.get("avg_conf", 0.0)),
+                "ocr_forward_passes": result.get("forward_passes"),
                 "engine": result.get("engine_used", "local_yolo")}
 
     warmup_start = perf_counter()
@@ -270,8 +271,8 @@ def main(argv=None):
     import cv2
     import torch
     import ultralytics
-    from src.core.detector import LicensePlateDetector
-    from src.core.ocr_engine import PlateOCREngine
+    from src.core.image.detector import LicensePlateDetector
+    from src.core.ocr.engine import PlateOCREngine
     torch.set_num_threads(args.threads)
     started = perf_counter()
     detector = LicensePlateDetector(str(model_path), conf_threshold=args.ap_min_confidence)
@@ -298,7 +299,7 @@ def main(argv=None):
                 "ocr_weights": {"path": str(ocr_path), "sha256": sha256(ocr_path)},
                 "detector_class_names": detector.model.names,
                 "source_sha256": {str(path.relative_to(ROOT)): sha256(path) for path in
-                                  [Path(__file__).resolve(), ROOT / "src/evaluation/metrics.py", ROOT / "src/core/detector.py", ROOT / "src/core/ocr_engine.py", ROOT / "src/core/postprocessor.py", ROOT / "src/core/preprocessor.py"]},
+                                  [Path(__file__).resolve(), ROOT / "src/evaluation/metrics.py", ROOT / "src/core/image/detector.py", ROOT / "src/core/ocr/engine.py", ROOT / "src/core/ocr/postprocessor.py", ROOT / "src/core/image/preprocessor.py"]},
                 "versions": {"python": platform.python_version(), "torch": torch.__version__, "opencv": cv2.__version__, "ultralytics": ultralytics.__version__},
                 "platform": platform.platform(), "cpu": platform.processor(), "torch_threads": args.threads,
                 "device": "cpu", "cloud_enabled": False, "warmup_iterations": args.warmup,

@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text
+from sqlalchemy.orm import validates
+from src.core.ocr.postprocessor import PlatePostprocessor
 from src.db.session import Base
 
 class PlateHistory(Base):
@@ -11,12 +13,18 @@ class PlateHistory(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     plate_number = Column(String(50), index=True, nullable=False)
+    plate_number_clean = Column(String(50), index=True)
     confidence = Column(Float, nullable=False)
     plate_type = Column(String(50), nullable=True)  # one_line hoặc two_line
     engine_used = Column(String(50), nullable=True, default="local_yolo") # local_yolo hoặc 9router_vision
     cropped_plate_url = Column(String(255), nullable=True)
     annotated_image_url = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.now, index=True)
+
+    @validates("plate_number")
+    def normalize_number(self, key, value):
+        self.plate_number_clean = PlatePostprocessor.clean_text(value)
+        return value
 
     def to_dict(self):
         return {
@@ -52,3 +60,21 @@ class AuthAttempt(Base):
     id = Column(Integer, primary_key=True)
     key = Column(String(64), nullable=False, index=True)
     created_at = Column(DateTime, nullable=False, index=True)
+
+
+def utcnow():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+class VideoJob(Base):
+    __tablename__ = "video_jobs"
+    id = Column(String(64), primary_key=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    filename = Column(String(255), nullable=False)
+    mode = Column(String(30), default="fast", nullable=False)
+    status = Column(String(30), index=True, default="queued", nullable=False)
+    progress = Column(Integer, default=0, nullable=False)
+    error = Column(String(500))
+    result_json = Column(Text)
+    created_at = Column(DateTime, default=utcnow, nullable=False)
+    updated_at = Column(DateTime, default=utcnow, onupdate=utcnow, nullable=False)

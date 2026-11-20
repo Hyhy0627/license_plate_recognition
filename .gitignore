@@ -79,5 +79,6 @@ test_system.py
 
 # Local caches and generated repository inventories
 .pytest_cache/
+.ruff_cache/
 /project_structure.json
 /.codex-worktrees/

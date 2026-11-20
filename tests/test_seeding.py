@@ -11,7 +11,7 @@ import pytest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
 
-from src.api.auth import verify_password
+from src.services.authentication import verify_password
 from src.db.migrations import initialize_database
 from src.db.models import AuthAttempt, User, UserSession
 from src.db.seed import SeedConfigurationError, read_seed_configuration, seed_user

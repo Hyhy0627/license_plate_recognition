@@ -37,10 +37,10 @@ def main():
                       FINAL_RESULTS_DIR=str(out / "annotated"))
     from fastapi.testclient import TestClient
     from main import app
-    from src.api import video_routes
+    from src.services import video_jobs
     from src.config import settings
     import torch
-    video_routes.UPLOAD_DIR = out / "video_jobs"
+    video_jobs.UPLOAD_DIR = out / "video_jobs"
     observations = []
     report = {"scope": "real models + HTTP TestClient; local OCR only; no browser/network latency",
               "accuracy": None, "accuracy_note": "No ground truth asserted; use scripts/benchmark.py for labeled accuracy.",

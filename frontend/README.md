@@ -23,6 +23,8 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 Đồng thời thêm origin frontend vào `CORS_ORIGINS` trong `.env` backend. Frontend gọi API trực tiếp; `next.config.ts` hiện không khai báo API proxy. Với bản production, cần đặt biến `NEXT_PUBLIC_API_URL` khi build và build lại nếu đổi địa chỉ; biến môi trường chỉ đặt lúc chạy container không tự cập nhật mã trình duyệt đã build.
 
+Docker Compose truyền `NEXT_PUBLIC_API_URL` vào build argument của frontend (mặc định `http://localhost:8000`). Khi đổi URL, đặt biến này trong môi trường chạy Compose hoặc `.env` gốc rồi chạy `docker compose up --build -d`; URL phải truy cập được từ trình duyệt của người dùng.
+
 Auth provider đọc `/api/auth/me`; fetch gửi cookie với `credentials: "include"`. Backend lưu phiên và kiểm tra chủ sở hữu lịch sử/ảnh/video. Frontend không quản lý JWT hoặc vai trò Admin/Guest.
 
 Trang `/video` gửi video tải lên, polling trạng thái job và vẽ annotation theo metadata trên file media. Đây không phải luồng camera trực tiếp. `/history` hiển thị lịch sử nhận diện ảnh của tài khoản; chưa có chức năng xuất/xóa lịch sử.
@@ -34,4 +36,4 @@ npm --prefix frontend run lint
 npm --prefix frontend run build
 ```
 
-Kết quả kiểm tra có thời điểm/phạm vi cụ thể nằm tại [báo cáo đồng bộ tài liệu](../docs/results/documentation_sync.md). Lint/build không thay cho kiểm thử thao tác trình duyệt hoặc độ chính xác AI; xem [hướng dẫn kiểm thử](../tests/TESTING.md).
+Kết quả lint/build, Playwright và Docker có thời điểm/phạm vi cụ thể nằm tại [báo cáo giai đoạn 5](../docs/results/evaluation.md). Lint/build không thay cho kiểm thử thao tác trình duyệt hoặc độ chính xác AI; xem [hướng dẫn kiểm thử](../tests/TESTING.md).

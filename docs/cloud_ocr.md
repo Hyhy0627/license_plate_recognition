@@ -1,6 +1,8 @@
 # OCR qua NineRouter
 
-`src/core/ninerouter_vision.py` là HTTP client gọi dịch vụ Vision qua gateway tương thích `/chat/completions`. Backend không chạy mô hình ngôn ngữ/thị giác đó trong tiến trình Python. Dù gateway đặt ở localhost, gateway vẫn có thể chuyển request đến nhà cung cấp bên ngoài.
+`src/core/integrations/ninerouter_vision.py` là HTTP client gọi dịch vụ Vision qua gateway tương thích `/chat/completions`. Backend không chạy mô hình ngôn ngữ/thị giác đó trong tiến trình Python. Dù gateway đặt ở localhost, gateway vẫn có thể chuyển request đến nhà cung cấp bên ngoài.
+
+Luồng ảnh được điều phối tại `src/services/image_recognition.py`; job video thuộc `src/services/video_jobs.py` và thuật toán video trong `src/core/video/tracker.py`. Việc tách module không thay các điều kiện gọi gateway.
 
 ## Khi nào gọi
 

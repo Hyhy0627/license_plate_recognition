@@ -51,7 +51,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   useEffect(() => {
-    if (status === "anonymous") router.replace(`/login?next=${pathname === "/history" ? "/history" : "/"}`);
+    if (status === "anonymous") router.replace(`/login?next=${pathname === "/history" || pathname === "/video" ? pathname : "/"}`);
   }, [status, pathname, router]);
   if (status === "error") return <div className="session-state" role="alert"><h1>Chưa kết nối được máy chủ</h1><p>Không thể kiểm tra phiên đăng nhập. Vui lòng thử lại.</p><button onClick={() => void refresh()}>Thử lại</button></div>;
   if (!user) return <div className="session-state" role="status"><LoaderCircle className="animate-spin" aria-hidden="true" /><p>Đang kiểm tra phiên đăng nhập…</p></div>;

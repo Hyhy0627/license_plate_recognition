@@ -1,4 +1,4 @@
-"""Replay fixed development images through the real API; keep before/after evidence.
+"""Replay fixed development images through the image service used by the API; keep before/after evidence.
 
 Local mode disables cloud. Hybrid mode uses configured cloud, which is nondeterministic.
 The in-process API uses a separate SQLite DB and output directory for every run.
@@ -9,7 +9,6 @@ import asyncio
 from collections import Counter
 from datetime import datetime, timezone
 import hashlib
-import io
 import inspect
 import os
 import json
@@ -39,10 +38,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--label", required=True)
     parser.add_argument("--mode", choices=["local", "hybrid"], default="local")
+    parser.add_argument("--ocr-engine", choices=["yolo", "onnx", "cct", "fastplate"], default="yolo",
+                        help="Local OCR implementation (direct service mode only)")
     parser.add_argument("--base-url", help="Use running HTTP backend instead of isolated API")
     parser.add_argument("--email", help="Account email for --base-url; password comes from ALPR_TEST_PASSWORD")
     parser.add_argument("--cases", type=Path)
     args = parser.parse_args()
+    if args.ocr_engine != "yolo" and (args.base_url or args.mode != "local"):
+        parser.error("--ocr-engine requires direct service with --mode local")
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S_%fZ")
     out = ROOT / "data" / "recognition_regression" / f"{stamp}_{args.label}"
     out.mkdir(parents=True)
@@ -82,13 +85,12 @@ def main():
             raise RuntimeError(f"Test account login failed: HTTP {login.status_code}")
         endpoint = args.base_url.rstrip("/") + "/api/license-plates/detect"
     else:
-        from fastapi import UploadFile
         from sqlalchemy import create_engine
         from sqlalchemy.orm import sessionmaker
         from src.config import settings
-        from src.api import routes
-        from src.db.session import Base, get_db
-        from src.core.ocr_engine import PlateOCREngine
+        from src.services import image_recognition, model_runtime
+        from src.db.session import Base
+        from src.core.ocr.engine import PlateOCREngine
         from src.db.models import User
         for field, folder in [("CROPPED_PLATES_DIR", "crops"), ("FINAL_RESULTS_DIR", "results")]:
             target = out / folder
@@ -103,17 +105,31 @@ def main():
             session.commit()
             session.refresh(test_user)
             session.expunge(test_user)
-        routes._ocr_engine = PlateOCREngine(engine_type="yolo" if args.mode == "local" else "hybrid")
-        if routes.get_detector().model is None or routes._ocr_engine.yolo_ocr is None:
+        model_runtime._ocr_engine = PlateOCREngine(engine_type=args.ocr_engine if args.mode == "local" else "hybrid")
+        if model_runtime.get_detector().model is None or not model_runtime.ocr_model_loaded(model_runtime._ocr_engine):
             raise RuntimeError("Required model failed to load; abort instead of measuring an empty detector")
 
-    output = {"label": args.label, "mode": args.mode, "transport": "HTTP" if args.base_url else "direct API handler",
+    output = {"label": args.label, "mode": args.mode, "ocr_engine": args.ocr_engine if not args.base_url else "server configuration",
+              "transport": "HTTP" if args.base_url else "direct image service",
               "purpose": "development regression, not held-out accuracy", "threads": 2,
               "code_hashes": {str(p.relative_to(ROOT)): digest(p) for p in (ROOT / "src").rglob("*.py")},
-              "model_hashes": {name: digest(ROOT / "models" / name) for name in ["best.pt", "LP_ocr.pt"]}, "cases": []}
+              "model_hashes": {}, "cases": []}
+    if not args.base_url:
+        detector_path = Path(model_runtime.get_detector().model_path).resolve()
+        model_paths = [detector_path]
+        if model_runtime._ocr_engine.yolo_ocr is not None:
+            model_paths.append(Path(model_runtime._ocr_engine.yolo_ocr.ckpt_path).resolve())
+        for path in model_paths:
+            name = str(path.relative_to(ROOT / "models")) if path.is_relative_to(ROOT / "models") else str(path)
+            output["model_hashes"][name] = digest(path)
     line_model = ROOT / "models/easyocr/english_g2.pth"
     if line_model.is_file():
         output["model_hashes"]["easyocr/english_g2.pth"] = digest(line_model)
+    if not args.base_url and args.ocr_engine in {"onnx", "cct", "fastplate"}:
+        for value in (settings.VIDEO_OCR_MODEL_PATH, settings.VIDEO_OCR_CONFIG_PATH):
+            path = Path(value)
+            path = path if path.is_absolute() else ROOT / path
+            output["model_hashes"][str(path.relative_to(ROOT))] = digest(path)
     for case in cases:
         started = time.perf_counter()
         if args.base_url:
@@ -121,9 +137,8 @@ def main():
                 response = client.post(endpoint, files={"file": (Path(case["path"]).name, image_file, "image/jpeg")}, timeout=90)
             body, status_code = response.json(), response.status_code
         else:
-            with sessions() as session:
-                upload = UploadFile(filename=Path(case["path"]).name, file=io.BytesIO(Path(case["path"]).read_bytes()))
-                result = routes.detect_license_plate(file=upload, db=session, user=test_user)
+            with sessions() as session, open(case["path"], "rb") as upload:
+                result = image_recognition.detect_license_plate(file=upload, db=session, user=test_user)
                 response = asyncio.run(result) if inspect.isawaitable(result) else result
                 body, status_code = response.model_dump(), 200
         actual = [p["plate_number"] for p in body.get("results", [])]

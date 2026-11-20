@@ -50,7 +50,7 @@ Không tạo biểu đồ ablation nếu chưa thực sự chạy các biến th
 2. **OCR trên crop GT:** đo riêng khả năng đọc ký tự khi vị trí biển đã được cung cấp. Báo cả chuỗi thô và chuỗi sau định dạng. Kết quả này không được đưa vào dự đoán của pipeline.
 3. **Local end-to-end:** detector → crop dự đoán → YOLO OCR → định dạng → giữ chuỗi qua kiểm tra cấu trúc. Không dùng bbox/chuỗi GT để cứu biển bỏ sót. Tỷ lệ khớp phải đạt cả IoU và nội dung chuỗi sau chuẩn hóa dấu/khoảng trắng.
 
-Đây là benchmark **pipeline cục bộ cơ bản**, không phải benchmark endpoint web hiện tại. Chưa bao gồm nhánh OCR cụm ký tự toàn ảnh, OCR toàn ảnh, Vision toàn ảnh, cloud, ghi ảnh, DB và HTTP của `routes.py`. Không dùng kết quả này để tuyên bố độ chính xác hoặc độ trễ của chế độ hybrid/web.
+Đây là benchmark **pipeline cục bộ cơ bản**, không phải benchmark endpoint web hiện tại. Chưa bao gồm nhánh OCR cụm ký tự toàn ảnh, OCR toàn ảnh, Vision toàn ảnh, cloud, ghi ảnh, DB và HTTP của service ảnh/API. Không dùng kết quả này để tuyên bố độ chính xác hoặc độ trễ của chế độ hybrid/web.
 
 ## Định nghĩa chỉ số
 
@@ -118,4 +118,6 @@ Các ca gồm: TP/FP/FN, box trùng, AP bị giảm khi FP có confidence cao, b
 
 ## Trạng thái số liệu
 
-Đợt đồng bộ tài liệu không chạy benchmark AI mới: độ chính xác/độ trễ hiện tại **chưa đo**. Xem [kết quả kiểm tra tài liệu](../docs/results/documentation_sync.md) để phân biệt test phần mềm với phép đo model.
+Số đo ngày 19/11/2026 nằm trong [báo cáo giai đoạn 5](../docs/results/evaluation.md), gồm toàn bộ 40 fixture tổng hợp, một nhóm nhỏ ảnh web có nhãn sẵn và trạng thái gateway cloud. Xem [kết quả kiểm tra tài liệu](../docs/results/documentation_sync.md) để phân biệt kết quả lịch sử với phép đo mới.
+
+Giai đoạn 4 có smoke benchmark trước–sau trên 2 ảnh tổng hợp để đối chiếu khi chuyển module; đây không phải nghiệm thu toàn bộ tập dữ liệu. Xem [bằng chứng](../docs/results/service_refactor.md).
