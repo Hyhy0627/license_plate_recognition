@@ -1,18 +1,17 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ScanLine } from "lucide-react";
 import SiteNavigation from "./site-navigation";
 import { AccountMenu } from "./auth-provider";
 import LiveClock from "./live-clock";
+import PlateBrand from "./plate-brand";
 
 export default function AppFrame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   if (pathname === "/login" || pathname === "/register") return <main>{children}</main>;
   return <div className="app-shell">
     <aside className="sidebar">
-      <Link href="/" className="brand"><span className="brand-mark"><ScanLine aria-hidden="true" size={23} /></span><span>PlateSight<span className="brand-sub">Nhận diện biển số</span></span></Link>
+      <PlateBrand />
       <SiteNavigation />
       <div className="sidebar-note"><span className="mini-label">Mỗi hình ảnh, một kết quả</span><p>Nhìn rõ hơn.<br />Quản lý dễ hơn.</p><span>Hệ thống nhận diện biển số Việt Nam</span></div>
     </aside>

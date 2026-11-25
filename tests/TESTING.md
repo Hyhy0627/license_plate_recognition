@@ -1,6 +1,6 @@
 # Hướng dẫn kiểm thử và đánh giá
 
-Mọi lệnh chạy từ **thư mục gốc repository**. Test tài khoản dùng cookie phiên và kiểm tra chủ sở hữu dữ liệu; cơ chế xác thực được mô tả tại [kiến trúc dự án](../PROJECT_STRUCTURE.md).
+Mọi lệnh chạy từ **thư mục gốc repository**. Test tài khoản dùng cookie phiên và kiểm tra chủ sở hữu dữ liệu. [Cơ chế xác thực](../docs/security.md)
 
 Bộ kiểm thử thao tác người dùng và benchmark tổng hợp mới:
 [benchmark/README.md](../benchmark/README.md). Chạy
@@ -10,6 +10,8 @@ bao gồm pytest, TypeScript, ESLint và Playwright. Runner không chạy produc
 ---
 
 ## 1. Kiểm thử tự động
+
+Các test tích hợp PostgreSQL chạy khi đặt `ALPR_TEST_POSTGRES_URL` trỏ đến cơ sở dữ liệu kiểm thử. Tài khoản cần quyền tạo schema. Mỗi test tạo và dọn schema riêng. Bộ kiểm thử mặc định chạy bằng SQLite và dùng nguồn media giả lập để kiểm tra HTTP Range của S3. [Cấu hình cơ sở dữ liệu và lưu trữ](../docs/data.md)
 
 ```powershell
 .\venv\Scripts\python.exe -m pytest tests -q

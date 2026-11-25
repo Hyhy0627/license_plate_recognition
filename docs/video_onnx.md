@@ -9,12 +9,16 @@ API phân tích video ngắn, trả metadata theo vết và phục vụ lại fi
 Bộ model video mặc định gồm `DetectLisence_YOLO11.pt` và `cct_s_v1_vn.onnx`, cùng cấu hình OCR. `models/yolov8n.pt` trong thư mục model là model phương tiện dùng để theo vết. Vị trí và lệnh cài đầy đủ nằm tại [hướng dẫn trọng số](../models/weights_readme.txt).
 
 ```powershell
-.\venv\Scripts\python.exe scripts/setup_video_models.py
+.\venv\Scripts\python.exe scripts/download_models.py --group video
 ```
 
 Script chỉ tải trọng số thiếu/sai checksum từ phiên bản cố định và cài cấu hình YAML đi kèm. Runtime dùng mã đã nằm trong `src/`; không cần clone ứng dụng khác. Adapter OCR chuyển BGR sang RGB, loại confidence của padding và không bật thêm bộ tiền xử lý CLAHE/khử nhiễu của lớp kế thừa.
 
-Cache/factory model thuộc `src/services/model_runtime.py`; bộ quản lý job/worker thuộc `src/services/video_jobs.py`. Route chỉ xác thực đầu vào HTTP và gọi service.
+Factory `ModelRuntime` và registry nằm trong `src/core/models/`. `src/services/model_runtime.py` giữ cache theo tiến trình và khóa suy luận. `src/services/video_jobs.py` quản lý job video. Route xác thực đầu vào HTTP và gọi service.
+
+## Luồng job trong kiến trúc mục tiêu
+
+Ở giai đoạn 4, FastAPI dự kiến lưu upload qua lớp lưu trữ, tạo bản ghi job, gửi tham chiếu tệp qua Redis và trả `job_id`. Worker riêng sẽ đọc video, chạy tracking/OCR và cập nhật tiến trình, kết quả vào kho lưu trữ chung. Giao diện tiếp tục truy vấn trạng thái theo `job_id` và phát video qua endpoint media có kiểm tra chủ sở hữu và HTTP Range. Các giới hạn runtime bên dưới mô tả executor nội bộ đang chạy. [Kiến trúc triển khai](../README.md#kien-truc-trien-khai)
 
 ## Engine và chế độ API
 
@@ -43,7 +47,8 @@ Khởi động lại backend sau khi đổi cấu hình. Điều kiện remote v
 - Upload tối đa 100 MB; chấp nhận đuôi MP4, MOV, AVI, WEBM và còn phải giải mã/đọc metadata được.
 - Video tối đa 45 giây, độ phân giải không quá Full HD theo số pixel; tracker kiểm tra metadata và FPS.
 - Profile fast/detailed đặt mục tiêu lấy mẫu 5 frame/giây, kích thước suy luận phương tiện 640. Stride được làm tròn từ FPS nguồn nên tần suất mẫu thực tế có thể khác; đây là cấu hình, không phải FPS xử lý đo được.
-- Executor có một worker; tổng job queued/running tối đa hai. Job/progress/result được lưu vào bảng SQLite `video_jobs`. Kết quả hoàn tất vẫn đọc được sau restart; job bị gián đoạn được đánh dấu failed khi truy vấn hoặc nhận job mới, không tự chạy lại. File lock cần dùng chung cùng thư mục video/SQLite giữa các worker trên máy chủ.
+- Executor có một worker trong mỗi tiến trình. Tổng job queued/running tối đa hai trên database đang dùng. Bảng `video_jobs` lưu tiến trình và kết quả. Job bị gián đoạn được đánh dấu failed khi truy vấn hoặc nhận job mới. SQLite dùng file lock cùng máy, còn PostgreSQL dùng advisory lock để nhận biết job đang hoạt động trên máy khác.
+- Với S3, executor tải upload vào thư mục tạm để OpenCV đọc và dọn thư mục khi xử lý xong. API truyền dải byte yêu cầu từ bucket riêng sau khi xác minh chủ sở hữu. [Cấu hình lưu trữ](data.md)
 - Detector/OCR biển video được cache theo tiến trình; model phương tiện/tracker được tạo mới cho từng video.
 - Kết quả tổng hợp có thể vẫn sai dù lặp lại qua nhiều frame. Kiểm tra định dạng biển không chứng minh nội dung đúng.
 
@@ -58,7 +63,7 @@ Chạy từ thư mục gốc với video thực sự có trên máy:
 
 Cả hai lệnh đều tắt OCR từ xa. JSON ghi thời gian nạp detector/OCR biển, thời gian phân tích và tổng thời gian. Việc tạo model phương tiện nằm trong `process_video`, nên thuộc thời gian phân tích của CLI. API bắt đầu tính trước khi lấy engine, không bao gồm upload/thời gian xếp hàng. Hai phép đo khác mode không tách riêng đóng góp của model; cần cùng mode/dữ liệu để so sánh có kiểm soát.
 
-Trong đợt đồng bộ tài liệu, hiệu năng và độ chính xác video **chưa đo**. Các số thời gian/tăng tốc từng ghi tại đây đã được bỏ khỏi hướng dẫn hiện hành vì file bằng chứng không còn ở workspace; xem snapshot [AUDIT.md](../AUDIT.md). Chưa có kết quả tracking có nhãn MOTA/IDF1 hoặc ablation tái lập kèm tài liệu này.
+Trong đợt đồng bộ tài liệu, hiệu năng và độ chính xác video **chưa đo**. Các số thời gian/tăng tốc từng ghi tại đây đã được bỏ khỏi hướng dẫn hiện hành vì file bằng chứng không còn ở workspace; xem bản `AUDIT.md` trong lịch sử Git. Chưa có kết quả tracking có nhãn MOTA/IDF1 hoặc ablation tái lập kèm tài liệu này.
 
 <a id="nguon-ma-va-model"></a>
 
@@ -66,18 +71,19 @@ Trong đợt đồng bộ tài liệu, hiệu năng và độ chính xác video 
 
 ## Lõi đọc biển số
 
-- Tác giả/repository: [ddkhoa2605/LicensePlateDetection](https://github.com/ddkhoa2605/LicensePlateDetection).
-- Phiên bản: `f1c732e2270becc44df1de6529372f63ef251076`.
+- Tác giả/repository: [ddkhoa2605/LicensePlateDetection](https://github.com/ddkhoa2605/LicensePlateDetection), commit `f1c732e2270becc44df1de6529372f63ef251076`.
 - File gốc: `appStreamlit.py`, lớp `SimplePlateDetector`.
 - File tích hợp: `src/core/video/plate_reader.py`, lớp `PlateReader`.
 - Các thuật toán kế thừa: tiền xử lý crop, crop có padding, bỏ phiếu ký tự theo confidence, quản lý vòng đời track và xử lý frame.
 - Điều chỉnh của đồ án: bỏ phụ thuộc Streamlit; nạp model tùy chọn; cập nhật API Fast Plate OCR 1.1; chuyển BGR sang RGB; loại padding trước khi tính confidence; cho phép tắt tiền xử lý trong adapter video để giữ luồng đang chạy.
 - Backend dùng OCR từ lớp này qua `VideoPlateOCR`; theo vết phương tiện và schema trả về cho web vẫn nằm trong `src/core/video/tracker.py`.
 
-Thông tin nguồn được giữ để phân biệt phần kế thừa với phần nhóm tự triển khai. Repository gốc không có file LICENSE riêng tại phiên bản được tích hợp; tài liệu này không cấp thêm quyền sử dụng.
+Thông tin nguồn được giữ để phân biệt phần kế thừa với phần nhóm tự triển khai. Repository gốc không có file LICENSE riêng tại phiên bản được tích hợp; tài liệu này không cấp thêm quyền sử dụng. Cần xác nhận giấy phép hoặc được chủ sở hữu đồng ý trước khi phân phối mã chuyển thể và trọng số; nếu không có quyền phù hợp, thay các thành phần đó bằng nguồn có giấy phép rõ ràng. Việc dẫn nguồn trong báo cáo không thay cho quyền sử dụng.
 
 ### Trọng số và cấu hình OCR
 
-`DetectLisence_YOLO11.pt`, `cct_s_v1_vn.onnx` và cấu hình `cct_s_v1_vn_plate_config.yaml` lấy từ cùng phiên bản trên. Cấu hình được lưu tại `src/core/video/video_ocr.yaml`; trọng số được cài riêng bằng `scripts/setup_video_models.py` với SHA256 cố định. Không coi các trọng số này là model do nhóm tự huấn luyện.
+`DetectLisence_YOLO11.pt`, `cct_s_v1_vn.onnx` và cấu hình `cct_s_v1_vn_plate_config.yaml` thuộc bộ model video kế thừa. Trình cài chọn bản trọng số cố định và xác minh SHA‑256. Cấu hình đi kèm được lấy từ `src/core/video/video_ocr.yaml`. Lệnh `scripts/setup_video_models.py` vẫn cài nhóm detector biển và OCR video như trước.
+
+Tệp `cct_s_v1_vn.onnx` đã có ở repository gốc; đồ án không nhận công huấn luyện hoặc chuyển đổi tệp này. Nguồn huấn luyện và quyền phân phối của `models/best.pt` và `models/LP_ocr.pt` chưa được xác minh trong tài liệu hiện có.
 
 Ultralytics, Fast Plate OCR và ONNX Runtime vẫn là các thư viện cài qua `requirements.txt`, không phải mã do nhóm tự phát triển.

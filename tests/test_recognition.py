@@ -10,9 +10,9 @@ from fastapi import UploadFile
 
 from src.core.ocr.postprocessor import PlatePostprocessor as P
 from src.core.ocr.engine import PlateOCREngine
-from src.core.integrations.ninerouter_vision import NineRouterVisionClient
+from src.infrastructure.ninerouter_vision import NineRouterVisionClient
 from src.api import routes
-from src.services import image_recognition
+from src.services import cloud_vision, image_recognition
 from src.config import settings
 
 
@@ -53,6 +53,14 @@ class FormatTests(unittest.TestCase):
 
 
 class CloudBudgetTests(unittest.TestCase):
+    def test_cloud_adapter_is_bound_only_for_remote_modes(self):
+        with patch.object(cloud_vision, "_get_ninerouter_client") as bind:
+            for mode in ("yolo", "onnx", "cct", "fastplate", "paddleocr", "easyocr"):
+                self.assertIsNone(cloud_vision.get_cloud_vision_client(mode))
+            bind.assert_not_called()
+            for mode in ("hybrid", "9router"):
+                self.assertIs(cloud_vision.get_cloud_vision_client(mode), bind.return_value)
+
     def run_detection(self, detected_boxes, remote_result):
         image = np.full((100, 200, 3), 127, dtype=np.uint8)
         upload = UploadFile(filename="test.png", file=io.BytesIO(cv2.imencode(".png", image)[1].tobytes()))
@@ -64,12 +72,17 @@ class CloudBudgetTests(unittest.TestCase):
         detector.detect.return_value = [{"bbox": [5, 5, 50, 50], "confidence": .9}] * detected_boxes
         detector.crop_plate.return_value = image
         ocr = MagicMock()
-        ocr.ninerouter_client = remote
+        ocr.engine_type = "hybrid"
         ocr.yolo_ocr = None
         ocr.recognize_local_yolo.return_value = {"raw_text": "", "avg_conf": 0}
         original = settings.FINAL_RESULTS_DIR
         try:
-            with tempfile.TemporaryDirectory() as directory, patch.object(image_recognition, "get_detector", return_value=detector), patch.object(image_recognition, "get_ocr_engine", return_value=ocr):
+            with (
+                tempfile.TemporaryDirectory() as directory,
+                patch.object(image_recognition, "get_detector", return_value=detector),
+                patch.object(image_recognition, "get_ocr_engine", return_value=ocr),
+                patch.object(image_recognition, "get_cloud_vision_client", return_value=remote),
+            ):
                 settings.FINAL_RESULTS_DIR = directory
                 response = routes.detect_license_plate(upload, MagicMock(), SimpleNamespace(id=1))
         finally:

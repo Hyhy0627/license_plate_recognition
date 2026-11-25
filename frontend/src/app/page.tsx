@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- Uploaded images and API crops use their original local URLs. */
 
 import { useEffect, useRef, useState, type ChangeEvent, type CSSProperties, type DragEvent } from "react";
-import { AlertCircle, ArrowUpRight, Check, FileImage, ImagePlus, ScanLine, ShieldCheck, Upload, X, Layers, History, Focus, ArrowRight } from "lucide-react";
+import { AlertCircle, ArrowUpRight, Camera, Check, FileImage, ImagePlus, ScanLine, ShieldCheck, Upload, X, Layers, History, Focus, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { PlateDetectionResponse } from "../types/api";
 import { apiFetch } from "../lib/api";
@@ -43,9 +43,13 @@ function RecognitionWorkspace() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [annotated, setAnnotated] = useState(true);
   const [scanStepIndex, setScanStepIndex] = useState(0);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const requestRef = useRef<AbortController | null>(null);
+  const cameraRef = useRef<HTMLVideoElement>(null);
+  const cameraCloseRef = useRef<HTMLButtonElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
   const results = detectionResponse?.results ?? [];
   const activeResult = results[activeIndex];
   const cropUrl = imageUrl(activeResult?.cropped_image_url);
@@ -54,6 +58,39 @@ function RecognitionWorkspace() {
 
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
   useEffect(() => () => { requestRef.current?.abort(); }, []);
+  useEffect(() => () => { cameraStreamRef.current?.getTracks().forEach(track => track.stop()); }, []);
+  useEffect(() => { if (cameraOpen && cameraRef.current) cameraRef.current.srcObject = cameraStreamRef.current; }, [cameraOpen]);
+  useEffect(() => {
+    if (!cameraOpen) return;
+    cameraCloseRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") closeCamera(); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [cameraOpen]);
+
+  async function openCamera() {
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error("Trình duyệt không hỗ trợ camera hoặc trang chưa dùng HTTPS.");
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      cameraStreamRef.current = stream;
+      setCameraOpen(true);
+    } catch (reason) { setErrorMessage(reason instanceof Error ? reason.message : "Không mở được camera."); }
+  }
+
+  function closeCamera() {
+    cameraStreamRef.current?.getTracks().forEach(track => track.stop());
+    cameraStreamRef.current = null;
+    setCameraOpen(false);
+  }
+
+  function captureCamera() {
+    const video = cameraRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+    canvas.getContext("2d")?.drawImage(video, 0, 0);
+    canvas.toBlob(blob => { if (blob) { closeCamera(); void processImage(new File([blob], "camera.jpg", { type: "image/jpeg" })); } }, "image/jpeg", 0.9);
+  }
 
   // Tiến trình các bước AI giả lập mượt mà khi đang xử lý
   useEffect(() => {
@@ -172,11 +209,17 @@ function RecognitionWorkspace() {
             </div>
             <h3>Tải ảnh phương tiện</h3>
             <p>Kéo thả ảnh hoặc bấm <strong>Ctrl + V</strong> để nhận diện</p>
-            <button className="primary-button upload-cta" onClick={() => fileInputRef.current?.click()}><Upload size={17} aria-hidden="true" /> Chọn hình ảnh <ArrowRight size={16} aria-hidden="true" /></button><span className="upload-limit">JPG, PNG hoặc WEBP · Tối đa 10 MB</span>
+            <button className="primary-button upload-cta" onClick={() => fileInputRef.current?.click()}><Upload size={17} aria-hidden="true" /> Chọn hình ảnh <ArrowRight size={16} aria-hidden="true" /></button>
+            <button type="button" onClick={() => void openCamera()} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-cyan-500"><Camera size={16} aria-hidden="true" /> Chụp từ camera</button>
+            <span className="upload-limit">JPG, PNG hoặc WEBP · Tối đa 10 MB</span>
           </div>}
 
           {isDragging && <div className="drop-overlay"><Upload size={36} aria-hidden="true" /><strong>Thả ảnh để bắt đầu nhận diện</strong></div>}
-        </div>
+    </div>
+    {cameraOpen && <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4" role="dialog" aria-modal="true" aria-label="Chụp ảnh từ camera">
+      <div className="w-full max-w-2xl rounded-2xl bg-white p-4 shadow-xl"><video ref={cameraRef} autoPlay playsInline muted className="max-h-[70vh] w-full rounded-lg bg-black object-contain" />
+        <div className="mt-4 flex justify-end gap-2"><button ref={cameraCloseRef} type="button" onClick={closeCamera} className="rounded-lg border border-slate-300 px-4 py-2 text-sm">Đóng</button><button type="button" onClick={captureCamera} className="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">Chụp ảnh</button></div>
+      </div></div>}
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={onFileChange} className="sr-only" aria-label="Chọn ảnh phương tiện" />
         <div className="upload-footer"><span><ShieldCheck size={14} aria-hidden="true" />{selectedFile ? selectedFile.name : "Dán Ctrl+V hoặc kéo thả ảnh để nhận diện"}</span><span>{detectionResponse ? `${results.length} biển được nhận diện` : "Tự động phân tích sau khi tải"}</span></div>
       </div>

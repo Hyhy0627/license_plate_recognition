@@ -1,4 +1,4 @@
-"""Idempotent schema initialization for the existing SQLite database.
+"""Idempotent schema initialization for SQLite and PostgreSQL.
 
 This module never seeds accounts or changes user passwords. Explicit account
 creation is handled by scripts/seed_user.py and src/db/seed.py.
@@ -14,8 +14,19 @@ def initialize_database(engine):
     with engine.begin() as connection:
         if engine.dialect.name == "sqlite":
             connection.exec_driver_sql("BEGIN IMMEDIATE")
+        elif engine.dialect.name == "postgresql":
+            # Serialize schema creation across app instances. This two-integer
+            # key uses a separate namespace from the bigint video-job locks.
+            connection.execute(text("SELECT pg_advisory_xact_lock(982451653, 1)"))
         Base.metadata.create_all(bind=connection)
-        columns = {column["name"] for column in inspect(connection).get_columns("plate_history")}
+        schema = inspect(connection)
+        video_columns = {column["name"] for column in schema.get_columns("video_jobs")}
+        if "queue_backend" not in video_columns:
+            connection.execute(text("ALTER TABLE video_jobs ADD COLUMN queue_backend VARCHAR(16)"))
+        if "worker_token" not in video_columns:
+            connection.execute(text("ALTER TABLE video_jobs ADD COLUMN worker_token VARCHAR(32)"))
+
+        columns = {column["name"] for column in schema.get_columns("plate_history")}
         if "owner_id" not in columns:
             connection.execute(text("ALTER TABLE plate_history ADD COLUMN owner_id INTEGER REFERENCES users(id)"))
         if "plate_number_clean" not in columns:

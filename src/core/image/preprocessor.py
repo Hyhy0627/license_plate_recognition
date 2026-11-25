@@ -61,11 +61,31 @@ class PlatePreprocessor:
         - top_part: Dòng trên (Mã tỉnh + Seri chữ, VD: 59-A1)
         - bottom_part: Dòng dưới (Số thứ tự, VD: 123.45)
         """
+        if plate_img is None or plate_img.size == 0:
+            return plate_img, plate_img
         h, w = plate_img.shape[:2]
-        mid_h = int(h * 0.48)  # Tỷ lệ chia xấp xỉ dòng trên và dòng dưới
+        if h < 8 or w < 8:
+            mid_h = max(1, h // 2)
+            return plate_img[:mid_h, :], plate_img[mid_h:, :]
 
-        top_part = plate_img[0:mid_h, :]
-        bottom_part = plate_img[mid_h:h, :]
+        gray = cv2.cvtColor(plate_img, cv2.COLOR_BGR2GRAY) if plate_img.ndim == 3 else plate_img
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # Ký tự là cực tính chiếm ít pixel hơn ở phần giữa crop.
+        x1, x2 = max(0, w // 12), min(w, w - w // 12)
+        centre = binary[:, x1:x2]
+        foreground = centre == (255 if np.mean(centre > 0) < 0.5 else 0)
+        profile = foreground.sum(axis=1).astype(np.float32)
+        profile = np.convolve(profile, np.ones(3) / 3, mode="same")
+        start, stop = max(1, int(h * 0.35)), min(h - 1, int(h * 0.65))
+        mid_h = int(h * 0.48)
+        if stop > start and profile[:start].max(initial=0) > 0 and profile[stop:].max(initial=0) > 0:
+            gap = start + int(np.argmin(profile[start:stop]))
+            peak = min(float(profile[:start].max()), float(profile[stop:].max()))
+            if profile[gap] <= peak * 0.45:
+                mid_h = gap
+
+        top_part = plate_img[:mid_h, :]
+        bottom_part = plate_img[mid_h:, :]
 
         return top_part, bottom_part
 
@@ -78,19 +98,23 @@ class PlatePreprocessor:
             return plate_img
 
         gray = cv2.cvtColor(plate_img, cv2.COLOR_BGR2GRAY) if len(plate_img.shape) == 3 else plate_img
-        coords = np.column_stack(np.where(gray > 0))
-        if len(coords) == 0:
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        h, w = gray.shape
+        margin_y, margin_x = max(1, h // 20), max(1, w // 20)
+        interior = binary[margin_y:h - margin_y, margin_x:w - margin_x]
+        if interior.size == 0:
             return plate_img
-
+        foreground = interior == (255 if np.mean(interior > 0) < 0.5 else 0)
+        if np.mean(foreground) < 0.01 or np.mean(foreground) > 0.45:
+            return plate_img
+        ys, xs = np.where(foreground)
+        coords = np.column_stack((xs, ys)).astype(np.float32)
         angle = cv2.minAreaRect(coords)[-1]
-        if angle < -45:
-            angle = -(90 + angle)
-        else:
-            angle = -angle
+        if angle > 45:
+            angle -= 90
 
         # Nếu độ nghiêng nhỏ, tiến hành xoay
-        if abs(angle) > 1.0 and abs(angle) < 45.0:
-            h, w = plate_img.shape[:2]
+        if 1.0 < abs(angle) < 20.0:
             center = (w // 2, h // 2)
             M = cv2.getRotationMatrix2D(center, angle, 1.0)
             rotated = cv2.warpAffine(plate_img, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
@@ -111,6 +135,11 @@ class PlatePreprocessor:
 
         if plate_img.ndim == 3:
             hsv = cv2.cvtColor(plate_img, cv2.COLOR_BGR2HSV)
+            # Biển vàng có chữ tối, giữ nguyên cực tính OCR dù phần crop có
+            # viền xe tối làm giảm độ sáng trung vị.
+            yellow_mask = cv2.inRange(hsv, np.array([20, 100, 100]), np.array([35, 255, 255]))
+            if np.mean(yellow_mask > 0) > 0.30:
+                return False
             blue_mask = cv2.inRange(hsv, np.array([90, 50, 40]), np.array([135, 255, 255]))
             blue_ratio = np.mean(blue_mask > 0)
             if blue_ratio > 0.18:

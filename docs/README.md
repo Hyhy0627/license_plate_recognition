@@ -1,23 +1,37 @@
 # Tài liệu dự án
 
-[README ở gốc](../README.md) là điểm bắt đầu để cài đặt/chạy ứng dụng. [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) là mô tả kiến trúc, module, API và database hiện hành. Các tài liệu dưới đây bổ sung theo công việc, không duy trì một cây thư mục hay danh sách API thứ hai.
+README ở gốc tập trung hướng dẫn cài đặt, cây thư mục, API hiện hành và sơ đồ C4 cấp 2 của kiến trúc mục tiêu. [Kiến trúc triển khai](../README.md#kien-truc-trien-khai)
+
+## Lộ trình chuyển đổi
+
+Môi trường chạy hiện tại gồm Next.js và FastAPI với SQLite, lưu trữ tệp cục bộ và executor video trong tiến trình API. Lộ trình dưới đây mô tả cách chuyển sang kiến trúc phân tán. `APP_ENV=production` hiện bật thuộc tính Secure của cookie. Việc chọn đồng thời cụm PostgreSQL, Redis, worker và MinIO/S3 thuộc giai đoạn triển khai production.
+
+| Giai đoạn | Phạm vi |
+|---|---|
+| 1 | Mô tả cấu hình một máy chủ và kiến trúc mục tiêu, luồng dữ liệu và ranh giới bảo mật |
+| 2 | `main.py` lắp ráp FastAPI qua `create_app()`. Vòng đời, middleware và route media nằm trong `src/api/`. [Adapter NineRouter](cloud_ocr.md) |
+| 3 | Pool và migration SQLite/PostgreSQL, adapter local/S3, media riêng tư có HTTP Range. [Cấu hình dữ liệu](data.md) |
+| 4 | Tách worker khỏi FastAPI, đưa hàng đợi và giới hạn đăng nhập phân tán lên Redis |
+| 5 | Registry trọng số theo SHA‑256, factory ModelRuntime và phép đo throughput HTTP. [Kết quả giai đoạn 5](results/model_runtime_stage5.md) |
+| 6 | Đóng gói cấu hình phát triển nhẹ và cụm production có Nginx |
+| 7 | Kiểm tra hồi quy OpenAPI, tải đồng thời và bàn giao |
+
+## Tài liệu chuyên đề
 
 | Tài liệu | Phạm vi |
 |---|---|
 | [Backend hardening](results/backend_hardening.md) | Khóa suy luận, OCR thoát sớm/CCT, video jobs, Range, healthcheck và kiểm chứng |
-| [Kết quả giai đoạn 5](results/evaluation.md) | Pytest, lint/build, trình duyệt, Docker và benchmark local/cloud |
+| [Kết quả đánh giá trước đây](results/evaluation.md) | Pytest, lint/build, trình duyệt, Docker và benchmark local/cloud |
 | [cloud_ocr.md](cloud_ocr.md) | Điều kiện gọi NineRouter, dữ liệu gửi đi và cấu hình local |
 | [video_onnx.md](video_onnx.md) | Luồng video, mode/engine, giới hạn xử lý và cách đo |
 | [security.md](security.md) | Tài khoản, lệnh seed riêng và phạm vi rà soát secret |
-| [Kết quả giai đoạn 4](results/service_refactor.md) | Tách core/services, đối chiếu API và kết quả local trước–sau |
-| [Kết quả giai đoạn 3](results/security_hardening.md) | Kiểm thử seed, migration và bảo mật cơ bản |
+| [Đợt tách core/services](results/service_refactor.md) | Đối chiếu API và kết quả local trước–sau |
+| [Đợt rà soát bảo mật](results/security_hardening.md) | Kiểm thử seed, migration và bảo mật cơ bản |
 | [data.md](data.md) | Dữ liệu runtime và fixture được version hóa |
-| [tools/README.md](tools/README.md) | Phạm vi công cụ tài liệu và script đã ngừng dùng |
-| [Kết quả giai đoạn 2](results/repository_cleanup.md) | Các đường dẫn đã chuyển và kiểm tra tính toàn vẹn |
+| [Đợt tổ chức lại thư mục](results/repository_cleanup.md) | Các đường dẫn đã chuyển và kiểm tra tính toàn vẹn |
 | [Kiểm thử](../tests/TESTING.md) | Test phần mềm, benchmark, notebook |
 | [Nguồn mã và model](video_onnx.md#nguon-ma-va-model) | Phần kế thừa và các điều chỉnh tích hợp |
-| [Kết quả giai đoạn 1](results/documentation_sync.md) | Lệnh/kết quả kiểm tra của đợt đồng bộ tài liệu |
-| [Kiểm toán giai đoạn 0](../AUDIT.md) | Snapshot sai lệch trước đồng bộ; không phải hướng dẫn cấu hình mới |
+| [Đợt đồng bộ tài liệu trước đây](results/documentation_sync.md) | Lệnh và kết quả kiểm tra của đợt đồng bộ |
 
 ## Trạng thái báo cáo và biểu đồ
 

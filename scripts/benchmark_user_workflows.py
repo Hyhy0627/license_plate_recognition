@@ -39,6 +39,8 @@ def main():
     from main import app
     from src.services import video_jobs
     from src.config import settings
+    from src.core.models.registry import resolve_path
+    from src.core.models.runtime import image_ocr_model_path
     import torch
     video_jobs.UPLOAD_DIR = out / "video_jobs"
     observations = []
@@ -50,8 +52,8 @@ def main():
                                   cuda_available=torch.cuda.is_available(), inference_threads=settings.INFERENCE_THREADS,
                                   packages={name: version(name) for name in ("torch", "ultralytics", "onnxruntime", "fast-plate-ocr")})
     report["model_sha256"] = {}
-    for value in (settings.YOLO_MODEL_PATH, ROOT / "models/LP_ocr.pt", settings.VIDEO_PLATE_MODEL_PATH, settings.VIDEO_OCR_MODEL_PATH):
-        model = Path(value)
+    for value in (settings.YOLO_MODEL_PATH, image_ocr_model_path(), settings.VIDEO_PLATE_MODEL_PATH, settings.VIDEO_OCR_MODEL_PATH):
+        model = resolve_path(value)
         if model.is_file():
             report["model_sha256"][model.name] = hashlib.sha256(model.read_bytes()).hexdigest()
     def request(client, name, method, path, expected=200, **kwargs):

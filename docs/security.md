@@ -8,6 +8,12 @@ Mật khẩu được băm bằng scrypt; phiên đăng nhập dùng token ngẫ
 
 Không có `SECRET_KEY` để ký JWT trong kiến trúc hiện tại. Không thêm một khóa mặc định cho cơ chế không sử dụng nó. Token phiên và salt mật khẩu do thư viện `secrets` sinh; API key gateway là secret riêng đọc từ cấu hình, default trong source/example để trống.
 
+## Ranh giới bảo mật trong kiến trúc mục tiêu
+
+Nginx dự kiến là điểm vào HTTPS duy nhất. Giới hạn lưu lượng ở biên bổ sung cho giới hạn đăng nhập theo IP và tài khoản ở FastAPI. Redis sẽ lưu trạng thái phiên và bộ đếm dùng chung giữa các bản sao API. Ở cấu hình hiện tại, các bản ghi phiên nằm trong SQLite và bộ đếm giới hạn đăng nhập nằm trong RAM của FastAPI.
+
+API tiếp tục kiểm tra quyền sở hữu trước khi trả lịch sử, ảnh hoặc video. PostgreSQL, Redis và MinIO/S3 dự kiến chỉ cho phép truy cập từ dịch vụ được cấp quyền. Worker dùng khóa dịch vụ riêng khi gửi dữ liệu OCR qua NineRouter. [Kiến trúc triển khai](../README.md#kien-truc-trien-khai)
+
 ## Tạo tài khoản bằng lệnh seed riêng
 
 Chỉ chạy khi người vận hành chủ động gọi:

@@ -1,3 +1,5 @@
+"""HTTP adapter for the NineRouter vision gateway."""
+
 import base64
 import json
 import time
@@ -9,10 +11,11 @@ import numpy as np
 from typing import Dict, Any, Optional
 
 from src.config import settings
+from src.core.integrations.base import ICloudVisionClient
 from src.utils.logger import logger
 
 
-class NineRouterVisionClient:
+class NineRouterVisionClient(ICloudVisionClient):
     """
     Client kết nối tới 9Router AI Gateway để nhận diện ký tự biển số xe
     bằng mô hình Vision-Language Model (VLM: GPT-4o, Claude 3.5/Sonnet, Gemini, Qwen-VL...).

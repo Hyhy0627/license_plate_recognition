@@ -81,35 +81,38 @@ button svg,a svg {
   z-index:40;
 }
 
-.brand {
+.plate-brand {
   display:flex;
   align-items:center;
-  gap:11px;
-  padding:0 10px;
-  color:#fff;
-  font-size:22px;
-  font-weight:750;
-  letter-spacing:-.8px;
+  flex:none;
+  gap:10px;
+  width:max-content;
+  color:#F0F6FC;
 }
 
-.brand-mark {
+.plate-brand-mark {
   display:grid;
   place-items:center;
-  width:40px;
-  height:40px;
-  background:#7063f3;
-  border-radius:12px;
-  box-shadow:0 4px 20px #6054e830;
+  flex:none;
+  width:36px;
+  height:36px;
+  border-radius:11px;
+  background:linear-gradient(135deg,#6953a8 0%,#264967 52%,#35C6D9 100%);
+  box-shadow:0 0 22px #35c6d925,inset 0 1px 0 #ffffff50;
+  color:#fff;
 }
 
-.brand-sub {
+.plate-brand-copy { display:flex; flex-direction:column; line-height:1.1; }
+.plate-brand-copy strong { font-size:19px; font-weight:750; letter-spacing:-.035em; }
+.plate-brand-copy small {
   display:block;
   margin-top:3px;
-  font-size:8px;
-  font-weight:500;
-  letter-spacing:1.7px;
-  color:#959bb6;
+  color:#8B9CAE;
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.18em;
 }
+.plate-brand:focus-visible { outline:2px solid #35C6D9; outline-offset:5px; border-radius:4px; }
 
 .side-nav {
   margin-top:54px;
@@ -1331,18 +1334,6 @@ button svg,a svg {
     width:100%;
     inset:auto;
     padding:18px 20px 0;
-  }
-  .brand {
-    padding:0;
-    font-size:21px;
-  }
-  .brand-mark {
-    height:35px;
-    width:35px;
-    border-radius:10px;
-  }
-  .brand-sub {
-    font-size:7px;
   }
   .side-nav {
     margin-top:20px;

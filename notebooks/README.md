@@ -44,4 +44,4 @@ Benchmark offline, handler local và Brave/hybrid có phạm vi khác nhau; khô
 
 Notebook hỗ trợ phân tích; kiểm thử tự động trong `tests/` và kiểm thử trực tiếp trên web vẫn là các bước riêng.
 
-Các notebook và báo cáo lịch sử không thay cho hướng dẫn kiến trúc hiện hành tại [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md). Việc runner xác nhận định dạng notebook hợp lệ không có nghĩa đã thực thi notebook hoặc tái lập được các số liệu. Trạng thái đợt đồng bộ: [kết quả kiểm tra](../docs/results/documentation_sync.md).
+Xem hướng dẫn hiện hành ở phần [kiến trúc triển khai](../README.md#kien-truc-trien-khai). Việc runner xác nhận định dạng notebook hợp lệ không có nghĩa đã thực thi notebook hoặc tái lập được các số liệu. Trạng thái đợt đồng bộ: [kết quả kiểm tra](../docs/results/documentation_sync.md).

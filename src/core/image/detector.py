@@ -6,7 +6,7 @@ import cv2
 class LicensePlateDetector:
     """
     Module phát hiện vị trí biển số xe sử dụng mô hình YOLOv8 chính thức (models/best.pt).
-    Tích hợp bộ lọc tỷ lệ khung hình (Aspect Ratio), diện tích tối đa và màu sắc để loại bỏ 100% box rác.
+    Áp dụng ngưỡng hình học và màu sắc để giảm dương tính giả.
     Phụ trách bởi: Người 2 (AI Detection).
     """
     def __init__(self, model_path: str, conf_threshold: float = 0.30):
@@ -40,17 +40,18 @@ class LicensePlateDetector:
                 if bw < 25 or bh < 15:
                     continue
 
-                # 2. Bỏ qua khung quá khổng lồ (> 25% diện tích cả bức ảnh - ví dụ cả đuôi xe)
-                box_area = float(bw * bh)
-                if box_area > (img_total_area * 0.25):
-                    continue
-
-                # 3. Lọc theo tỷ lệ khung hình chuẩn của biển số xe Việt Nam:
+                # Lọc theo tỷ lệ khung hình chuẩn của biển số xe Việt Nam:
                 # - Biển vuông (2 dòng): tỷ lệ W/H thường từ 1.1 đến 1.7
                 # - Biển dài (1 dòng): tỷ lệ W/H thường từ 2.2 đến 4.8
                 # Các box có tỷ lệ dọc (W/H < 0.9) hoặc quá dẹt (> 5.5) chắc chắn là rác (yên xe, bô xe, vè chắn bùn)
                 aspect_ratio = bw / float(bh)
                 if aspect_ratio < 0.90 or aspect_ratio > 5.2:
+                    continue
+
+                # Ảnh chụp gần có thể chứa biển chiếm phần lớn khung. Chỉ giữ
+                # ứng viên lớn khi detector tự tin và tỷ lệ vẫn giống biển.
+                area_ratio = float(bw * bh) / img_total_area
+                if area_ratio > 0.75 or (area_ratio > 0.25 and (conf < 0.60 or aspect_ratio < 1.1)):
                     continue
 
                 # 4. Lọc bỏ cụm đèn hậu màu đỏ tươi (False Positive phổ biến)
@@ -63,7 +64,16 @@ class LicensePlateDetector:
                     m2 = cv2.inRange(hsv_box, np.array([170, 80, 60]), np.array([180, 255, 255]))
                     red_ratio = (np.sum(m1 > 0) + np.sum(m2 > 0)) / float(box_crop.shape[0] * box_crop.shape[1])
                     if red_ratio > 0.40:
-                        continue
+                        # Nền đỏ có chữ trắng vẫn mang nhiều biên bên trong.
+                        # Chỉ bỏ vùng đỏ gần như trơn; OCR quyết định các ca còn lại.
+                        crop_h, crop_w = box_crop.shape[:2]
+                        inner = box_crop[crop_h // 10:crop_h - crop_h // 10,
+                                         crop_w // 10:crop_w - crop_w // 10]
+                        if inner.size:
+                            gray = cv2.cvtColor(inner, cv2.COLOR_BGR2GRAY)
+                            edges = cv2.Canny(gray, 60, 160)
+                            if np.mean(edges > 0) < 0.012 and np.std(gray) < 25:
+                                continue
 
                 # Tính khoảng cách từ tâm khung đến tâm ảnh
                 box_cx, box_cy = (x1 + x2) / 2.0, (y1 + y2) / 2.0
@@ -105,7 +115,7 @@ class LicensePlateDetector:
 
     def detect(self, image: np.ndarray, include_low_confidence: bool = False) -> List[Dict[str, Any]]:
         """
-        Phát hiện biển số xe với độ chính xác cao, loại bỏ triệt để các box rác.
+        Phát hiện ứng viên biển số và giảm các box dương tính giả.
         """
         if self.model is None or image is None or image.size == 0:
             return []

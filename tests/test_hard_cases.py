@@ -91,7 +91,7 @@ class HardCaseTests(unittest.TestCase):
         remote = MagicMock()
         remote.is_available.return_value = True
         ocr = MagicMock()
-        ocr.ninerouter_client = remote
+        ocr.engine_type = "hybrid"
         ocr.recognize_local_yolo.side_effect = [
             {'raw_text': '43A1234', 'text_lines': ['43A1234'], 'avg_conf': .90, 'plate_type': 'one_line'},
             {'raw_text': '43A12345', 'text_lines': ['43A12345'], 'avg_conf': .89, 'plate_type': 'one_line'},
@@ -100,7 +100,13 @@ class HardCaseTests(unittest.TestCase):
         try:
             with tempfile.TemporaryDirectory() as directory:
                 settings.CROPPED_PLATES_DIR = settings.FINAL_RESULTS_DIR = directory
-                with patch.object(image_recognition, 'get_detector', return_value=detector), patch.object(image_recognition, 'get_ocr_engine', return_value=ocr), patch.object(image_recognition, '_ocr_character_regions', return_value=[{'bbox': [40, 30, 250, 75], 'confidence': .85}]):
+                with (
+                    patch.object(image_recognition, "get_detector", return_value=detector),
+                    patch.object(image_recognition, "get_ocr_engine", return_value=ocr),
+                    patch.object(image_recognition, "get_cloud_vision_client", return_value=remote),
+                    patch.object(image_recognition, "_ocr_character_regions",
+                                 return_value=[{"bbox": [40, 30, 250, 75], "confidence": .85}]),
+                ):
                     response = routes.detect_license_plate(upload, MagicMock(), SimpleNamespace(id=1))
         finally:
             settings.CROPPED_PLATES_DIR, settings.FINAL_RESULTS_DIR = old_crop, old_final

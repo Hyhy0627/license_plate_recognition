@@ -2,7 +2,11 @@
 
 import io
 import time
-from unittest.mock import patch
+from contextlib import nullcontext
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
+
+import pytest
 
 from fastapi.testclient import TestClient
 
@@ -39,6 +43,7 @@ def test_video_media_range_and_owner_isolation(tmp_path, monkeypatch):
                 time.sleep(0.01)
             assert process.call_args.kwargs["mode"] == "fast"
             assert process.call_args.kwargs["use_remote_ocr"] is False
+            assert process.call_args.kwargs["cloud_vision"] is None
             media = client.get(f"/api/video-tracking/jobs/{job_id}/media", headers={"Range": "bytes=10-19"})
             assert media.headers["accept-ranges"] == "bytes"
             assert media.status_code == 206
@@ -83,3 +88,26 @@ def test_interrupted_worker_releases_queue_slot(tmp_path, monkeypatch):
             assert interrupted["status"] == "failed" and interrupted["progress"] == 45
     finally:
         engine.dispose()
+
+
+@pytest.mark.parametrize("mode", ["detailed", "combined"])
+def test_video_job_injects_cloud_and_timeout_for_detailed_processing(tmp_path, monkeypatch, mode):
+    bind = Mock()
+    process = Mock(return_value={"frames": [], "tracks": []})
+    lease = Mock()
+    monkeypatch.setattr(video_jobs, "_set_job", Mock())
+    monkeypatch.setattr(video_jobs, "get_detector", Mock())
+    monkeypatch.setattr(video_jobs, "get_ocr_engine", lambda: SimpleNamespace(engine_type="hybrid"))
+    monkeypatch.setattr(video_jobs, "get_cloud_vision_client", bind)
+    monkeypatch.setattr(video_jobs, "process_video", process)
+    monkeypatch.setattr(video_jobs.settings, "VIDEO_NINEROUTER_TIMEOUT", 7.5)
+
+    storage = SimpleNamespace(video_file=Mock(return_value=nullcontext(tmp_path / "clip.mp4")))
+    video_jobs._run_job("job", "clip.mp4", mode, lease, storage)
+
+    storage.video_file.assert_called_once_with("clip.mp4")
+    bind.assert_called_once_with("hybrid")
+    assert process.call_args.kwargs["cloud_vision"] is bind.return_value
+    assert process.call_args.kwargs["remote_ocr_timeout"] == 7.5
+    assert process.call_args.kwargs["use_remote_ocr"] is True
+    lease.release.assert_called_once()

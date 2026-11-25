@@ -1,0 +1,129 @@
+services:
+  proxy:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${ALPR_TLS_CERT_PATH:?Set ALPR_TLS_CERT_PATH}:/etc/nginx/certs/fullchain.pem:ro
+      - ${ALPR_TLS_KEY_PATH:?Set ALPR_TLS_KEY_PATH}:/etc/nginx/certs/privkey.pem:ro
+    depends_on:
+      - backend
+      - frontend
+    networks: [web]
+
+  backend:
+    build: {context: ., dockerfile: Dockerfile}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: ${ALPR_DATABASE_URL:?Set ALPR_DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      SESSION_BACKEND: redis
+      INFERENCE_WORKER_URL: http://ai_worker:8001
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET: ${ALPR_S3_BUCKET:-alpr}
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+      CORS_ORIGINS: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+    volumes:
+      - ./models:/app/models:ro
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      minio_init: {condition: service_completed_successfully}
+    networks: [web, data]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+    networks: [web]
+
+  ai_worker:
+    build: {context: ., dockerfile: Dockerfile}
+    command: ["python", "scripts/run_worker.py"]
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PYTHONPATH: /app
+      API_HOST: 0.0.0.0
+      API_PORT: 8001
+      DATABASE_URL: ${ALPR_DATABASE_URL:?Set ALPR_DATABASE_URL}
+      REDIS_URL: redis://redis:6379/0
+      SESSION_BACKEND: redis
+      INFERENCE_WORKER_URL: ""
+      STORAGE_BACKEND: s3
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET: ${ALPR_S3_BUCKET:-alpr}
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+      CORS_ORIGINS: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN}
+    volumes:
+      - ./models:/app/models:ro
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      minio_init: {condition: service_completed_successfully}
+    networks: [web, data]
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: alpr
+      POSTGRES_USER: alpr
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alpr -d alpr"]
+      interval: 5s
+      retries: 12
+    networks: [data]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 12
+    networks: [data]
+
+  minio:
+    image: ${MINIO_IMAGE:-minio/minio:RELEASE.2025-09-07T16-13-09Z}
+    command: server /data
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+    volumes: [minio_data:/data]
+    networks: [data]
+
+  minio_init:
+    image: ${MINIO_MC_IMAGE:-minio/mc:RELEASE.2025-08-13T08-35-41Z}
+    entrypoint: /bin/sh
+    command: -c 'until mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; do sleep 2; done; mc mb --ignore-existing local/"$$ALPR_S3_BUCKET"'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?Set MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD}
+      ALPR_S3_BUCKET: ${ALPR_S3_BUCKET:-alpr}
+    depends_on: [minio]
+    networks: [data]
+
+networks:
+  web: {}
+  data: {internal: true}
+
+volumes:
+  postgres_data: {}
+  redis_data: {}
+  minio_data: {}

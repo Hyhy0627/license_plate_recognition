@@ -29,6 +29,22 @@ class PlatePostprocessor:
         '8': 'B',
     }
 
+    # Chỉ sửa các cặp dễ nhầm khi có confidence của lần đọc OCR.
+    SAFE_CHAR_TO_DIGIT = {'O': '0', 'I': '1', 'B': '8', 'A': '4'}
+    SAFE_DIGIT_TO_CHAR = {'0': 'O', '1': 'I', '8': 'B', '4': 'A'}
+    # Phụ lục 02 Thông tư 51/2025/TT-BCA; 80 thuộc Cục CSGT.
+    # Chỉ dùng như bằng chứng phụ khi sửa OCR, không loại biển đặc biệt hoặc cũ.
+    REGISTRATION_PREFIXES_2025 = frozenset(
+        "11 12 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 "
+        "36 37 38 39 40 41 43 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 "
+        "64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 "
+        "86 88 89 90 92 93 94 95 97 98 99".split()
+    )
+
+    @classmethod
+    def is_known_registration_prefix(cls, text: str) -> bool:
+        return cls.clean_text(text)[:2] in cls.REGISTRATION_PREFIXES_2025
+
     @staticmethod
     def clean_text(raw_text: str) -> str:
         """
@@ -41,7 +57,8 @@ class PlatePostprocessor:
         return cleaned
 
     @classmethod
-    def format_vietnamese_plate(cls, cleaned_text: str, plate_type: Optional[str] = None, text_lines=None) -> str:
+    def format_vietnamese_plate(cls, cleaned_text: str, plate_type: Optional[str] = None,
+                                text_lines=None, confidence: Optional[float] = None) -> str:
         """
         Sửa lỗi dựa trên cấu trúc vị trí biển số xe Việt Nam và thêm định dạng dấu gạch/chấm chuẩn:
         - 2 ký tự đầu: Mã tỉnh (luôn là 2 chữ số, VD: 29, 30, 59, 88, 90,...)
@@ -54,6 +71,8 @@ class PlatePostprocessor:
         - Biển ô tô vuông:      30A 123.45
         """
         cleaned_text = cls.clean_text(cleaned_text)
+        allow_correction = (confidence is not None and confidence >= 0.75
+                            and len(cleaned_text) in (7, 8, 9, 10))
         # Row evidence disambiguates 54-H4 / 5555 from 54H / 45555.
         # Never delete a character merely to make an unsupported string pass regex.
         if text_lines and len(text_lines) > 1:
@@ -63,8 +82,12 @@ class PlatePostprocessor:
             prefix, serial = lines
             if len(prefix) not in (3, 4, 5) or len(serial) not in (4, 5):
                 return ""
-            prefix = "".join(cls.CHAR_TO_DIGIT.get(c, c) for c in prefix[:2]) + cls.DIGIT_TO_CHAR.get(prefix[2], prefix[2]) + prefix[3:]
-            serial = "".join(cls.CHAR_TO_DIGIT.get(c, c) for c in serial)
+            if allow_correction:
+                corrected_head = "".join(cls.SAFE_CHAR_TO_DIGIT.get(c, c) for c in prefix[:2])
+                prefix = ((corrected_head if cls.is_known_registration_prefix(corrected_head)
+                           else prefix[:2])
+                          + cls.SAFE_DIGIT_TO_CHAR.get(prefix[2], prefix[2]) + prefix[3:])
+                serial = "".join(cls.SAFE_CHAR_TO_DIGIT.get(c, c) for c in serial)
             if not re.fullmatch(r"[0-9]{2}(?:[A-Z][A-Z0-9]?|MD[0-9])", prefix) or not serial.isdigit():
                 return ""
             suffix = serial[:3] + "." + serial[3:] if len(serial) == 5 else serial
@@ -84,20 +107,16 @@ class PlatePostprocessor:
         if length < 7 or length > 10:
             return cleaned_text
 
-        # 1. Hai ký tự đầu bắt buộc phải là số (Mã tỉnh)
-        for i in [0, 1]:
-            if text[i] in cls.CHAR_TO_DIGIT:
-                text[i] = cls.CHAR_TO_DIGIT[text[i]]
-
-        # 2. Các ký tự cuối bắt buộc phải là số (thường là 4 hoặc 5 số cuối)
-        tail_start = 4 if length >= 8 and text[3].isalpha() else max(3, length - 5)
-        for i in range(tail_start, length):
-            if text[i] in cls.CHAR_TO_DIGIT:
-                text[i] = cls.CHAR_TO_DIGIT[text[i]]
-
-        # 3. Ký tự thứ 3 thường là chữ cái seri
-        if length >= 3 and text[2] in cls.DIGIT_TO_CHAR:
-            text[2] = cls.DIGIT_TO_CHAR[text[2]]
+        if allow_correction:
+            # Không đoán ký tự bị thiếu hoặc dùng bảng thay thế rộng theo index.
+            for i in (0, 1):
+                text[i] = cls.SAFE_CHAR_TO_DIGIT.get(text[i], text[i])
+            if not cls.is_known_registration_prefix("".join(text[:2])):
+                text[:2] = list(cleaned_text[:2])
+            tail_start = 4 if length >= 8 and text[3].isalpha() else max(3, length - 5)
+            for i in range(tail_start, length):
+                text[i] = cls.SAFE_CHAR_TO_DIGIT.get(text[i], text[i])
+            text[2] = cls.SAFE_DIGIT_TO_CHAR.get(text[2], text[2])
 
         raw = "".join(text)
 

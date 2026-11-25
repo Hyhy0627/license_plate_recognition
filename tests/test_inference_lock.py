@@ -40,9 +40,10 @@ def test_cloud_wait_allows_another_local_read(monkeypatch, has_crop):
     remote = SimpleNamespace(is_available=unlocked, recognize_plate=remote_read,
                              detect_and_recognize_plate=remote_read)
     detector = SimpleNamespace(detect=detect, crop_plate=lambda image, bbox: image)
-    ocr = SimpleNamespace(ninerouter_client=remote, yolo_ocr=None, recognize_local_yolo=read)
+    ocr = SimpleNamespace(engine_type="hybrid", yolo_ocr=None, recognize_local_yolo=read)
     monkeypatch.setattr(service, "get_detector", lambda: detector)
     monkeypatch.setattr(service, "get_ocr_engine", lambda: ocr)
+    monkeypatch.setattr(service, "get_cloud_vision_client", lambda _: remote)
     monkeypatch.setattr(cv2, "imwrite", unlocked)
     decode = cv2.imdecode
 

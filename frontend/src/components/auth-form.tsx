@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowRight, Check, Eye, EyeOff, Lock, Mail, ScanLine, ShieldCheck } from "lucide-react";
 import { apiError, apiFetch } from "../lib/api";
 import { useAuth } from "./auth-provider";
+import PlateBrand from "./plate-brand";
 
 type AuthMode = "login" | "register";
 
@@ -55,10 +56,7 @@ export default function AuthForm({ mode }: { mode: AuthMode }) {
     <div className="ps-auth-page h-screen overflow-hidden bg-[#111C28]" data-mode={mode}>
       <section className="ps-story-panel" aria-label="Giới thiệu PlateSight">
         <div className="ps-story-inner">
-          <Link href="/" className="ps-brand flex shrink-0 items-center gap-3" aria-label="PlateSight — Trang chủ">
-            <span className="ps-brand-mark grid h-11 w-11 place-items-center rounded-xl text-white"><ScanLine size={23} aria-hidden="true" /></span>
-            <span className="leading-tight"><strong className="block text-[19px] tracking-tight text-[#F0F6FC]">PlateSight</strong><small className="mt-0.5 block text-[9px] font-bold tracking-[.18em] text-[#8B9CAE]">NHẬN DIỆN BIỂN SỐ</small></span>
-          </Link>
+          <PlateBrand />
 
           <div className="ps-story-copy">
             <p className="mb-3 text-[10px] font-bold tracking-[.2em] text-[#35C6D9]">HÀNH TRÌNH NHẬN DIỆN BIỂN SỐ</p>

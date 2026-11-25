@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- API crops are displayed from the local recognition service. */
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { AlertCircle, ChevronLeft, ChevronRight, Clock3, Loader2, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Clock3, Download, Loader2, RefreshCw, Search, SlidersHorizontal, Trash2 } from "lucide-react";
 import type { DetectionHistoryItem, DetectionHistoryResponse, SearchPlatesResponse } from "../../types/api";
 import { apiFetch } from "../../lib/api";
 import { RequireAuth } from "../../components/auth-provider";
@@ -33,17 +33,19 @@ function HistoryWorkspace() {
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
+  const [plateType, setPlateType] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const loadHistory = useCallback(async (currentPage: number, plateQuery: string) => {
+  const loadHistory = useCallback(async (currentPage: number, plateQuery: string, type: string) => {
     setIsLoading(true);
     setError(null);
     try {
+      const filter = type ? `&plate_type=${type}` : "";
       const endpoint = plateQuery
-        ? `/api/license-plates/search?plate=${encodeURIComponent(plateQuery)}&page=${currentPage}&page_size=${PAGE_SIZE}`
-        : `/api/license-plates/history?page=${currentPage}&page_size=${PAGE_SIZE}`;
+        ? `/api/license-plates/search?plate=${encodeURIComponent(plateQuery)}&page=${currentPage}&page_size=${PAGE_SIZE}${filter}`
+        : `/api/license-plates/history?page=${currentPage}&page_size=${PAGE_SIZE}${filter}`;
       const response = await apiFetch(endpoint);
       if (!response.ok) throw new Error(`Máy chủ trả về lỗi ${response.status}.`);
 
@@ -70,8 +72,26 @@ function HistoryWorkspace() {
   useEffect(() => {
     // Fetch remote archive data when the selected page or search changes.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadHistory(page, submittedQuery);
-  }, [loadHistory, page, submittedQuery]);
+    void loadHistory(page, submittedQuery, plateType);
+  }, [loadHistory, page, submittedQuery, plateType]);
+
+  async function exportCsv() {
+    try {
+      const response = await apiFetch("/api/license-plates/export");
+      if (!response.ok) throw new Error("Không xuất được CSV.");
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a"); link.href = url; link.download = "plate-history.csv"; link.click();
+      URL.revokeObjectURL(url);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Không xuất được CSV."); }
+  }
+
+  async function removeHistory(id?: number) {
+    if (!window.confirm(id === undefined ? "Xóa toàn bộ lịch sử nhận diện của bạn?" : `Xóa bản ghi #${id}?`)) return;
+    const response = await apiFetch(id === undefined ? "/api/license-plates/history" : `/api/license-plates/${id}`, { method: "DELETE" });
+    if (!response.ok) { setError("Không xóa được lịch sử."); return; }
+    if (page > 1) setPage(1);
+    else await loadHistory(1, submittedQuery, plateType);
+  }
 
   const rangeLabel = useMemo(() => {
     if (total === 0) return "0 kết quả";
@@ -123,9 +143,17 @@ function HistoryWorkspace() {
             {submittedQuery ? (
               <button type="button" onClick={clearSearch} aria-label="Xóa tìm kiếm" title="Xóa tìm kiếm" className="rounded-lg border border-slate-200 bg-white px-3 text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"><RefreshCw aria-hidden="true" className="h-4 w-4" /></button>
             ) : (
-              <button type="button" onClick={() => void loadHistory(page, "")} aria-label="Tải lại lịch sử" title="Tải lại lịch sử" className="rounded-lg border border-slate-200 bg-white px-3 text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"><RefreshCw aria-hidden="true" className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /></button>
+              <button type="button" onClick={() => void loadHistory(page, "", plateType)} aria-label="Tải lại lịch sử" title="Tải lại lịch sử" className="rounded-lg border border-slate-200 bg-white px-3 text-slate-600 transition hover:bg-slate-50 hover:text-slate-950"><RefreshCw aria-hidden="true" className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} /></button>
             )}
           </form>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-5 py-3 sm:px-6">
+          <label htmlFor="history-plate-type" className="text-xs font-medium text-slate-600">Loại biển</label>
+          <select id="history-plate-type" value={plateType} onChange={event => { setPlateType(event.target.value); setPage(1); }} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:ring-2 focus:ring-blue-500">
+            <option value="">Tất cả</option><option value="one_line">Biển dài</option><option value="two_line">Biển vuông</option>
+          </select>
+          <button type="button" onClick={() => void exportCsv()} className="ml-auto inline-flex items-center gap-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"><Download size={14} aria-hidden="true" /> Xuất CSV</button>
+          <button type="button" onClick={() => void removeHistory()} disabled={total === 0} className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-700 disabled:opacity-40"><Trash2 size={14} aria-hidden="true" /> Xóa tất cả</button>
         </div>
 
         {error && <div role="alert" className="mx-5 mt-4 flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-sm text-red-800 sm:mx-6"><AlertCircle aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0" /><span>{error}</span></div>}
@@ -140,11 +168,12 @@ function HistoryWorkspace() {
                 <th scope="col" className="px-4 py-3.5 font-semibold">Phân loại</th>
                 <th scope="col" className="px-4 py-3.5 font-semibold">Độ tin cậy</th>
                 <th scope="col" className="px-5 py-3.5 font-semibold sm:px-6">Thời gian ghi nhận</th>
+                <th scope="col" className="px-4 py-3.5 font-semibold">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
-                <tr><td colSpan={6} className="px-5 py-16 text-center text-sm text-slate-500"><span className="inline-flex items-center gap-2"><Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-blue-700" />Đang tải dữ liệu...</span></td></tr>
+                <tr><td colSpan={7} className="px-5 py-16 text-center text-sm text-slate-500"><span className="inline-flex items-center gap-2"><Loader2 aria-hidden="true" className="h-4 w-4 animate-spin text-blue-700" />Đang tải dữ liệu...</span></td></tr>
               ) : items.length > 0 ? items.map((item) => {
                 const cropUrl = imageUrl(item.cropped_plate_url);
                 return (
@@ -155,10 +184,11 @@ function HistoryWorkspace() {
                     <td className="px-4 py-3.5"><span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">{item.plate_type === "two_line" ? "2 dòng" : item.plate_type === "one_line" ? "1 dòng" : "Không rõ"}</span></td>
                     <td className="px-4 py-3.5"><div className="flex items-center gap-2"><span className="h-1.5 w-12 overflow-hidden rounded-full bg-slate-100"><span className="block h-full rounded-full bg-teal-600" style={{ width: `${Math.max(0, Math.min(100, item.confidence * 100))}%` }} /></span><span className="font-semibold tabular-nums text-slate-700">{(item.confidence * 100).toFixed(1)}%</span></div></td>
                     <td className="px-5 py-3.5 text-xs text-slate-500 sm:px-6"><span className="inline-flex items-center gap-2"><Clock3 aria-hidden="true" className="h-3.5 w-3.5 text-slate-400" />{formatDate(item.created_at)}</span></td>
+                    <td className="px-4 py-3.5"><button type="button" onClick={() => void removeHistory(item.id)} aria-label={`Xóa bản ghi ${item.id}`} className="rounded-lg border border-red-200 p-2 text-red-700 focus:ring-2 focus:ring-red-500"><Trash2 size={15} aria-hidden="true" /></button></td>
                   </tr>
                 );
               }) : (
-                <tr><td colSpan={6} className="px-5 py-16 text-center text-sm text-slate-500">{submittedQuery ? `Không tìm thấy kết quả cho “${submittedQuery}”.` : "Chưa có lượt nhận diện nào được ghi nhận."}</td></tr>
+                <tr><td colSpan={7} className="px-5 py-16 text-center text-sm text-slate-500">{submittedQuery ? `Không tìm thấy kết quả cho “${submittedQuery}”.` : "Chưa có lượt nhận diện nào được ghi nhận."}</td></tr>
               )}
             </tbody>
           </table>

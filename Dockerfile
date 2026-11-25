@@ -30,6 +30,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy mã nguồn backend
 COPY main.py .
 COPY src/ src/
+COPY scripts/run_worker.py scripts/run_worker.py
 
 # Tạo các thư mục cần thiết
 RUN mkdir -p data/outputs data/video_jobs models

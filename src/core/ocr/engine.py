@@ -1,10 +1,12 @@
-import os
 import cv2
 import numpy as np
 from typing import Dict, Any, List
 from src.core.image.preprocessor import PlatePreprocessor
+from src.core.integrations.base import ICloudVisionClient
+from src.core.models.registry import default_path
+from src.core.models.runtime import image_ocr_model_path, sequence_model_paths
 from src.core.ocr.postprocessor import PlatePostprocessor
-from src.config import settings, BASE_DIR
+from src.config import settings
 from src.utils.logger import logger
 
 class PlateOCREngine:
@@ -15,58 +17,38 @@ class PlateOCREngine:
     2. 9Router Vision API (Gemini/GPT-4o) cứu cánh các ca khó, mờ, góc nghiêng hoặc bất thường.
     3. PaddleOCR / EasyOCR truyền thống dự phòng.
     """
-    def __init__(self, engine_type: str = "hybrid"):
+    def __init__(self, engine_type: str = "hybrid", *, cloud_vision: ICloudVisionClient | None = None):
         self.engine_type = engine_type.lower()
-        self.ninerouter_client = None
+        self.ninerouter_client = cloud_vision
         self.yolo_ocr = None
         self.sequence_ocr = None
         self.traditional_ocr = None
         from src.core.ocr.line_ocr import LocalLineOCR
-        self.line_ocr = LocalLineOCR(os.path.join(BASE_DIR, 'models', 'easyocr'))
+        self.line_ocr = LocalLineOCR(default_path("line-ocr").parent)
         self._init_ocr()
 
     def _init_ocr(self):
         if self.engine_type in {"onnx", "cct", "fastplate"}:
-            from pathlib import Path
             from src.core.video.models import VideoPlateOCR
 
-            paths = [Path(value) for value in (settings.VIDEO_OCR_MODEL_PATH, settings.VIDEO_OCR_CONFIG_PATH)]
-            paths = [path if path.is_absolute() else BASE_DIR / path for path in paths]
-            for path in paths:
-                if not path.is_file():
-                    raise ValueError(f"Thiếu model OCR CCT: {path}. Chạy scripts/setup_video_models.py.")
-            self.sequence_ocr = VideoPlateOCR(*paths)
+            self.sequence_ocr = VideoPlateOCR(*sequence_model_paths())
             if self.engine_type != "fastplate":
                 return
-        # 1. Khởi tạo 9Router Vision Client (cho mode 9router hoặc hybrid)
-        if self.engine_type in ["9router", "hybrid"]:
-            try:
-                from src.core.integrations.ninerouter_vision import NineRouterVisionClient
-                self.ninerouter_client = NineRouterVisionClient()
-                logger.info(f"9Router Vision Client initialized (Model: {settings.NINEROUTER_MODEL})")
-            except Exception as e:
-                logger.warning(f"Chưa khởi tạo 9Router Vision Client: {e}")
-                self.ninerouter_client = None
+        # Khởi tạo Local YOLO Character Recognizer (LP_ocr.pt)
+        yolo_ocr_path = image_ocr_model_path()
 
-        # 2. Khởi tạo Local YOLO Character Recognizer (LP_ocr.pt)
-        yolo_ocr_path = os.path.join(BASE_DIR, "models", "LP_ocr.pt")
-        if not os.path.exists(yolo_ocr_path):
-            alt_path = os.path.join(BASE_DIR, "script", "copy", "models", "LP_ocr.pt")
-            if os.path.exists(alt_path):
-                yolo_ocr_path = alt_path
-
-        if os.path.exists(yolo_ocr_path):
+        if yolo_ocr_path.is_file():
             try:
                 from ultralytics import YOLO
-                self.yolo_ocr = YOLO(yolo_ocr_path)
+                self.yolo_ocr = YOLO(str(yolo_ocr_path))
                 logger.info(f"Local YOLO OCR initialized from {yolo_ocr_path}")
             except Exception as e:
                 logger.error(f"Lỗi nạp Local YOLO OCR: {e}")
                 self.yolo_ocr = None
 
-        # 3. Engine truyền thống dự phòng (EasyOCR / PaddleOCR) được tải theo cơ chế Lazy Load khi cần
+        # EasyOCR / PaddleOCR được tải theo cơ chế lazy load khi cần.
         if self.engine_type == "fastplate" and self.yolo_ocr is None:
-            raise ValueError("OCR_ENGINE=fastplate cần models/LP_ocr.pt để đọc lại biển khó.")
+            raise ValueError(f"OCR_ENGINE=fastplate cần model OCR_MODEL_PATH: {settings.OCR_MODEL_PATH}.")
         self.traditional_ocr = None
 
     def _get_traditional_ocr(self):
@@ -219,7 +201,8 @@ class PlateOCREngine:
     @staticmethod
     def _result_quality(result):
         formatted = PlatePostprocessor.format_vietnamese_plate(
-            result.get("raw_text", ""), result.get("plate_type"), result.get("text_lines"))
+            result.get("raw_text", ""), result.get("plate_type"),
+            result.get("text_lines"), result.get("avg_conf"))
         return (PlatePostprocessor.validate_plate(formatted), result.get("avg_conf", 0.0),
                 -abs(result.get("chars_count", 0) - 8))
 
@@ -267,7 +250,8 @@ class PlateOCREngine:
         # series which can exceed the nine output slots of the VN model.
         if (read.get("plate_type") == "two_line" and len(raw) != 9) or raw[2:4] == "MD":
             return False
-        formatted = PlatePostprocessor.format_vietnamese_plate(raw, read.get("plate_type"))
+        formatted = PlatePostprocessor.format_vietnamese_plate(
+            raw, read.get("plate_type"), confidence=read.get("avg_conf"))
         return (PlatePostprocessor.validate_plate(formatted)
                 and PlatePostprocessor.clean_text(formatted) == raw
                 and "." in formatted)  # four-digit serials may be truncated

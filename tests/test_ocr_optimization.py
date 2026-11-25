@@ -111,7 +111,7 @@ def test_confident_detection_skips_expensive_service_fallbacks(monkeypatch, tmp_
     detector = SimpleNamespace(detect=lambda *a, **kw: [{"bbox": [0, 0, 240, 60], "confidence": .8}],
                                crop_plate=lambda *a, **kw: image)
     read = Mock(return_value={"raw_text": "30A12345", "avg_conf": .9, "engine_used": engine_name})
-    ocr = SimpleNamespace(yolo_ocr=object(), ninerouter_client=None, recognize_local_yolo=read)
+    ocr = SimpleNamespace(engine_type="yolo", yolo_ocr=object(), recognize_local_yolo=read)
     monkeypatch.setattr(image_recognition, "get_detector", lambda: detector)
     monkeypatch.setattr(image_recognition, "get_ocr_engine", lambda: ocr)
     fallback = Mock(side_effect=AssertionError("clear detection should skip fallback"))
@@ -134,7 +134,7 @@ def test_one_clear_plate_does_not_skip_rescue_for_an_unreadable_neighbour(monkey
     detector = SimpleNamespace(detect=lambda *a, **kw: [
         {"bbox": [0, 0, 100, 60], "confidence": .9}, {"bbox": [120, 0, 240, 60], "confidence": .3}],
         crop_plate=lambda *a, **kw: image)
-    ocr = SimpleNamespace(yolo_ocr=object(), ninerouter_client=None, recognize_local_yolo=Mock(side_effect=[
+    ocr = SimpleNamespace(engine_type="yolo", yolo_ocr=object(), recognize_local_yolo=Mock(side_effect=[
         {"raw_text": "30A12345", "avg_conf": .9}, {"raw_text": "59G2", "avg_conf": .9},
         {"raw_text": "59G277777", "avg_conf": .9}]))
     proposal = Mock(return_value=[{"bbox": [120, 0, 240, 60], "confidence": .9}])

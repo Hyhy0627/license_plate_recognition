@@ -1,37 +1,43 @@
-# Trọng số mô hình
+# Bộ trọng số baseline-v1
 
-Các đường dẫn tính từ thư mục gốc repository. Trọng số được ignore trong Git.
+Registry trong src/core/models/registry.py ánh xạ ID theo chức năng sang đường
+dẫn và nguồn cài. models/checksums.txt cố định phiên bản của từng tệp bằng
+SHA‑256. Git lưu registry, checksum và cấu hình OCR gốc.
 
-Ảnh — bắt buộc khi backend khởi động:
-- models/best.pt: YOLO phát hiện biển số.
-- models/LP_ocr.pt: YOLO nhận dạng ký tự.
+Ảnh mặc định
+- image-detector → models/best.pt
+- image-ocr → models/LP_ocr.pt
 
-Hai file trên cần được cung cấp riêng từ bộ model hiện có. Repository chưa có
-script tải tự động hoặc pipeline huấn luyện tái lập cho chúng. Không suy ra
-nguồn dữ liệu/việc nhóm tự huấn luyện chỉ từ tên file best.pt hoặc LP_ocr.pt.
+Video mặc định
+- vehicle-detector → models/yolov8n.pt
+- video-detector → models/video/DetectLisence_YOLO11.pt
+- sequence-ocr → models/video/cct_s_v1_vn.onnx
+- sequence-config → models/video/cct_s_v1_vn_plate_config.yaml
 
-Video — cần khi phân tích video:
-- models/yolov8n.pt: YOLO phát hiện phương tiện.
-- models/video/DetectLisence_YOLO11.pt: detector biển của bộ video mặc định.
-- models/video/cct_s_v1_vn.onnx: OCR của bộ video mặc định.
-- models/video/cct_s_v1_vn_plate_config.yaml: cấu hình khớp OCR.
+Chạy từ thư mục gốc bằng PowerShell.
 
-Cài hai trọng số biển video và cấu hình đi kèm:
-    .\venv\Scripts\python.exe scripts/setup_video_models.py
-Script kiểm tra SHA256, tải trọng số thiếu/sai checksum và sao chép cấu hình
-đã lưu tại src/core/video/video_ocr.yaml. Script không cài yolov8n.pt; cần cung cấp
-riêng file phương tiện đó. Nguồn/các thay đổi tích hợp: docs/video_onnx.md (mục Nguồn mã và model).
+    .\venv\Scripts\python.exe scripts/download_models.py
+    .\venv\Scripts\python.exe scripts/download_models.py --check
 
-EasyOCR dòng dự phòng (tùy chọn):
-    .\venv\Scripts\python.exe scripts/setup_ocr.py --download
-Model lưu tại models/easyocr/english_g2.pth; script kiểm tra checksum theo
-metadata EasyOCR. LocalLineOCR chỉ nạp file đã có, không tải trọng số trong request.
-Nhánh OCR truyền thống khác của PlateOCREngine có cơ chế nạp riêng; không khẳng
-định mọi engine EasyOCR/PaddleOCR đều đã nạp chỉ vì dependency được cài.
+Các trọng số video có nguồn mặc định và cấu hình OCR được sao chép từ
+src/core/video/video_ocr.yaml. Hai trọng số ảnh cần có sẵn với checksum khớp
+hoặc được nhóm cung cấp qua nguồn riêng. Đặt đúng tên tệp trong cùng thư mục
+Release hoặc cùng prefix S3, rồi chạy một trong hai lệnh sau.
 
-Hướng dẫn tổng thể: README.md.
-Engine/mode video và điều kiện remote: docs/video_onnx.md, docs/cloud_ocr.md.
+    .\venv\Scripts\python.exe scripts/download_models.py --group image --source-base s3://your-model-bucket/baseline-v1
+    .\venv\Scripts\python.exe scripts/download_models.py --group image --source-base https://github.com/OWNER/REPO/releases/download/baseline-v1
 
-models/checksums.txt ghi SHA256 theo đường dẫn tính từ gốc cho mọi trọng số
-đang có lúc dọn repository. best_toy.pt có trong inventory nhưng không được
-coi là model runtime mặc định. Thay model cần cập nhật inventory sau kiểm tra.
+S3 dùng chuỗi xác thực mặc định của AWS SDK. Nếu dùng ALPR_MODEL_SOURCE thay cho
+--source-base, đặt biến này trong môi trường shell. Nguồn chỉ định được dùng cho
+mọi trọng số trong nhóm đã chọn. --artifact cho phép chọn từng ID có trong registry.
+
+--check chỉ đọc tệp cục bộ. Chế độ cài bỏ qua tệp khớp checksum và chỉ thay tệp
+đích sau khi bản tải về hoặc cấu hình đi kèm đã qua xác minh. Đường dẫn runtime
+có thể cấu hình trong .env, chẳng hạn YOLO_MODEL_PATH, OCR_MODEL_PATH và các biến
+VIDEO_*_PATH. Trình cài kiểm tra đường dẫn của bộ baseline-v1 trong registry.
+Khi phát hành bộ trọng số mới, cập nhật phiên bản bộ, nguồn cố định và checksum
+tương ứng. Dùng đường dẫn riêng nếu triển khai trọng số tùy chỉnh song song.
+
+EasyOCR dòng dự phòng là tùy chọn. Cài bằng scripts/setup_ocr.py --download.
+best_toy.pt là mục inventory, ngoài bộ mặc định.
+Nguồn mô hình và phần tích hợp video được ghi trong docs/video_onnx.md.

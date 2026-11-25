@@ -1,6 +1,6 @@
 # PlateSight frontend
 
-Giao diện Next.js 16.4.5 và React 19.3.0 theo `package.json`. [README gốc](../README.md) hướng dẫn cài backend/model và chạy hai dịch vụ; [kiến trúc dự án](../PROJECT_STRUCTURE.md) mô tả API, phiên đăng nhập và dữ liệu.
+Giao diện Next.js 16.4.5 và React 19.3.0 theo `package.json`. README gốc hướng dẫn cài backend/model, chạy hai dịch vụ và mô tả API, phiên đăng nhập và dữ liệu. [README gốc](../README.md)
 
 ## Chạy frontend
 

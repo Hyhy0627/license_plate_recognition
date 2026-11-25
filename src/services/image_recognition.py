@@ -1,6 +1,5 @@
 """Image recognition orchestration, inference locking and result persistence."""
 
-import os
 import time
 import uuid
 
@@ -14,20 +13,15 @@ from src.services.schemas import DetectionResult, PlateDetectionResponse
 from src.core.ocr.postprocessor import PlatePostprocessor
 from src.core.image.plate_regions import quadrilateral_plate_regions
 from src.core.image.character_regions import _ocr_character_regions
+from src.services.cloud_vision import get_cloud_vision_client
 from src.services.model_runtime import get_detector, get_ocr_engine, _inference_lock
-from src.config import settings
+from src.services.storage import get_storage
 from src.db.models import PlateHistory, User
 from src.utils.visualizer import draw_plate_box
 from src.utils.logger import logger
 
 
-def detect_license_plate(file: BinaryIO, db: Session, user: User):
-    """Read local candidates, permit at most one cloud recognition call, and save
-    accepted results for the authenticated owner. Regex checks structure only.
-    """
-    start_time = time.perf_counter()
-
-    # Đọc file ảnh từ request
+def read_image_upload(file: BinaryIO) -> bytes:
     contents = file.read(10 * 1024 * 1024 + 1)
     if len(contents) > 10 * 1024 * 1024:
         raise PayloadTooLargeException("Ảnh quá lớn. Vui lòng chọn ảnh dưới 10 MB.")
@@ -35,6 +29,13 @@ def detect_license_plate(file: BinaryIO, db: Session, user: User):
         raise InvalidPayloadException(
             "Tập tin tải lên rỗng (0 bytes). Vui lòng chọn một file ảnh hợp lệ."
         )
+    return contents
+
+
+def detect_license_plate(file: BinaryIO, db: Session, user: User):
+    """Read local candidates, permit one cloud recognition call and save owner results."""
+    start_time = time.perf_counter()
+    contents = read_image_upload(file)
 
     try:
         nparr = np.frombuffer(contents, np.uint8)
@@ -60,7 +61,7 @@ def detect_license_plate(file: BinaryIO, db: Session, user: User):
     candidates = []
     has_valid_plate = False
     has_strong_plate = False
-    remote_ocr = getattr(ocr_engine, "ninerouter_client", None)
+    remote_ocr = get_cloud_vision_client(ocr_engine.engine_type)
     remote_ocr_available = False
     remote_calls = 0
     warnings = []
@@ -77,11 +78,13 @@ def detect_license_plate(file: BinaryIO, db: Session, user: User):
         if plate_crop is None or plate_crop.size == 0:
             continue
 
-        # Chạy Local YOLO OCR siêu tốc (~20ms)
+        # Chạy OCR cục bộ; thời gian phụ thuộc ảnh, model và phần cứng.
         with _inference_lock:
             ocr_res = ocr_engine.recognize_local_yolo(plate_crop)
         cleaned_text = PlatePostprocessor.clean_text(ocr_res.get("raw_text", ""))
-        formatted = PlatePostprocessor.format_vietnamese_plate(cleaned_text, plate_type=ocr_res.get("plate_type"), text_lines=ocr_res.get("text_lines"))
+        formatted = PlatePostprocessor.format_vietnamese_plate(
+            cleaned_text, plate_type=ocr_res.get("plate_type"),
+            text_lines=ocr_res.get("text_lines"), confidence=ocr_res.get("avg_conf"))
         is_valid = PlatePostprocessor.validate_plate(formatted)
         ocr_conf = float(ocr_res.get("avg_conf", 0.0))
         engine_used = ocr_res.get("engine_used", "local_yolo")
@@ -136,7 +139,8 @@ def detect_license_plate(file: BinaryIO, db: Session, user: User):
                 ocr_res = ocr_engine.recognize_local_yolo(plate_crop)
             cleaned_text = PlatePostprocessor.clean_text(ocr_res.get("raw_text", ""))
             formatted = PlatePostprocessor.format_vietnamese_plate(
-                cleaned_text, plate_type=ocr_res.get("plate_type"), text_lines=ocr_res.get("text_lines")
+                cleaned_text, plate_type=ocr_res.get("plate_type"),
+                text_lines=ocr_res.get("text_lines"), confidence=ocr_res.get("avg_conf")
             )
             if not PlatePostprocessor.validate_plate(formatted):
                 continue
@@ -180,7 +184,8 @@ def detect_license_plate(file: BinaryIO, db: Session, user: User):
             region_engine = ("cct_vn_onnx" if ocr_res.get("engine_used") == "cct_vn_onnx"
                              else "local_yolo_rectified")
             cleaned_text = PlatePostprocessor.clean_text(ocr_res.get("raw_text", ""))
-            formatted = PlatePostprocessor.format_vietnamese_plate(cleaned_text, ocr_res.get("plate_type"), ocr_res.get("text_lines"))
+            formatted = PlatePostprocessor.format_vietnamese_plate(
+                cleaned_text, ocr_res.get("plate_type"), ocr_res.get("text_lines"), ocr_res.get("avg_conf"))
             valid = PlatePostprocessor.validate_plate(formatted) and float(ocr_res.get("avg_conf", 0)) >= 0.60
             if not valid:
                 line_ocr = getattr(ocr_engine, "line_ocr", None)
@@ -188,7 +193,8 @@ def detect_license_plate(file: BinaryIO, db: Session, user: User):
                 # must not block YOLO/ONNX inference in other requests.
                 alternative = line_ocr.recognize(region["crop"]) if line_ocr else {}
                 alternative_text = PlatePostprocessor.clean_text(alternative.get("raw_text", ""))
-                alternative_formatted = PlatePostprocessor.format_vietnamese_plate(alternative_text, alternative.get("plate_type"), alternative.get("text_lines"))
+                alternative_formatted = PlatePostprocessor.format_vietnamese_plate(
+                    alternative_text, alternative.get("plate_type"), alternative.get("text_lines"), alternative.get("avg_conf"))
                 if alternative_text and PlatePostprocessor.validate_plate(alternative_formatted):
                     ocr_res, cleaned_text, formatted = alternative, alternative_text, alternative_formatted
                     valid, region_engine = True, "local_easyocr"
@@ -204,7 +210,8 @@ def detect_license_plate(file: BinaryIO, db: Session, user: User):
             full_ocr = ocr_engine.recognize_local_yolo(image, full_scene=True)
         full_clean = PlatePostprocessor.clean_text(full_ocr.get("raw_text", ""))
         full_formatted = PlatePostprocessor.format_vietnamese_plate(
-            full_clean, plate_type=full_ocr.get("plate_type"), text_lines=full_ocr.get("text_lines")
+            full_clean, plate_type=full_ocr.get("plate_type"),
+            text_lines=full_ocr.get("text_lines"), confidence=full_ocr.get("avg_conf")
         )
         if PlatePostprocessor.validate_plate(full_formatted) and float(full_ocr.get("avg_conf", 0)) >= 0.85:
             height, width = image.shape[:2]
@@ -232,7 +239,8 @@ def detect_license_plate(file: BinaryIO, db: Session, user: User):
             if remote_res.get("error"):
                 warnings.append("Dịch vụ OCR hỗ trợ hết thời gian chờ hoặc không phản hồi; chưa đọc được biển số từ ảnh này.")
             remote_clean = PlatePostprocessor.clean_text(remote_res.get("raw_text", ""))
-            formatted = PlatePostprocessor.format_vietnamese_plate(remote_clean, remote_res.get("plate_type"), remote_res.get("text_lines"))
+            formatted = PlatePostprocessor.format_vietnamese_plate(
+                remote_clean, remote_res.get("plate_type"), remote_res.get("text_lines"), remote_res.get("confidence"))
             if PlatePostprocessor.validate_plate(formatted) and float(remote_res.get("confidence", 0)) >= 0.65:
                 candidate.update(cleaned_text=remote_clean, formatted_plate=formatted, ocr_res=remote_res,
                                  conf=float(remote_res["confidence"]), is_valid=True, engine_used="9router_vision")
@@ -258,7 +266,9 @@ def detect_license_plate(file: BinaryIO, db: Session, user: User):
                     ai_bbox = ai_fullimg.get("bbox")
 
                     plate_crop_ai = detector.crop_plate(image, ai_bbox)
-                    ai_formatted = PlatePostprocessor.format_vietnamese_plate(ai_clean, plate_type=ai_fullimg.get("plate_type"), text_lines=ai_fullimg.get("text_lines"))
+                    ai_formatted = PlatePostprocessor.format_vietnamese_plate(
+                        ai_clean, plate_type=ai_fullimg.get("plate_type"),
+                        text_lines=ai_fullimg.get("text_lines"), confidence=ai_fullimg.get("confidence"))
                     ai_valid = PlatePostprocessor.validate_plate(ai_formatted)
 
                     # Thay thế hoàn toàn bằng 1 kết quả duy nhất, chính xác từ Cloud AI
@@ -284,65 +294,61 @@ def detect_license_plate(file: BinaryIO, db: Session, user: User):
     # Không hiện chuỗi OCR rác như một biển số nếu không qua kiểm tra cấu trúc.
     final_candidates = valid_candidates
 
+    storage = get_storage()
     results = []
-    created_db_items = []
+    written_files = []
     annotated_img = image.copy()
-
-    for item in final_candidates:
-        bbox = item["bbox"]
-        conf = item["conf"]
-        plate_crop = item["plate_crop"]
-        ocr_res = item["ocr_res"]
-        formatted_plate = item["formatted_plate"]
-        is_valid = item["is_valid"]
-        engine_used = item["engine_used"]
-
-        # Lưu ảnh crop
-        crop_filename = f"crop_{uuid.uuid4().hex}.jpg"
-        crop_path = os.path.join(settings.CROPPED_PLATES_DIR, crop_filename)
-        cv2.imwrite(crop_path, plate_crop)
-
-        # Vẽ lên ảnh kết quả
-        annotated_img = draw_plate_box(annotated_img, bbox, formatted_plate if formatted_plate else "LP", conf)
-
-        res_item = DetectionResult(
-            plate_number=formatted_plate or "UNKNOWN",
-            confidence=round(conf, 4),
-            plate_type=ocr_res.get("plate_type", "unknown"),
-            bbox=bbox,
-            engine_used=engine_used,
-            cropped_image_url=f"/static/cropped_plates/{crop_filename}",
-            annotated_image_url=None,
-            is_valid_format=is_valid
-        )
-        results.append(res_item)
-
-        # Lưu bản ghi vĩnh viễn vào SQLite (data/alpr.db)
-        history_record = PlateHistory(
-            owner_id=user.id,
-            plate_number=formatted_plate or "UNKNOWN",
-            confidence=conf,
-            plate_type=ocr_res.get("plate_type", "unknown"),
-            engine_used=engine_used,
-            cropped_plate_url=f"/static/cropped_plates/{crop_filename}",
-            annotated_image_url=None
-        )
-        db.add(history_record)
-        created_db_items.append(history_record)
-
-    # Lưu ảnh annotated
     annotated_filename = f"result_{uuid.uuid4().hex}.jpg"
-    annotated_path = os.path.join(settings.FINAL_RESULTS_DIR, annotated_filename)
-    cv2.imwrite(annotated_path, annotated_img)
+    annotated_url = storage.get_image_url("final_results", annotated_filename)
 
-    for r in results:
-        r.annotated_image_url = f"/static/final_results/{annotated_filename}"
+    try:
+        for item in final_candidates:
+            bbox = item["bbox"]
+            conf = item["conf"]
+            formatted_plate = item["formatted_plate"]
+            plate_type = item["ocr_res"].get("plate_type", "unknown")
+            engine_used = item["engine_used"]
 
-    # Cập nhật đường dẫn ảnh annotated vào database và commit
-    if created_db_items:
-        for db_item in created_db_items:
-            db_item.annotated_image_url = f"/static/final_results/{annotated_filename}"
-        db.commit()
+            crop_filename = f"crop_{uuid.uuid4().hex}.jpg"
+            crop_url = storage.get_image_url("cropped_plates", crop_filename)
+            written_files.append(("cropped_plates", crop_filename))
+            storage.save_image("cropped_plates", crop_filename, item["plate_crop"])
+            annotated_img = draw_plate_box(annotated_img, bbox, formatted_plate or "LP", conf)
+
+            results.append(DetectionResult(
+                plate_number=formatted_plate or "UNKNOWN",
+                confidence=round(conf, 4),
+                plate_type=plate_type,
+                bbox=bbox,
+                engine_used=engine_used,
+                cropped_image_url=crop_url,
+                annotated_image_url=annotated_url,
+                is_valid_format=item["is_valid"],
+            ))
+            db.add(PlateHistory(
+                owner_id=user.id,
+                plate_number=formatted_plate or "UNKNOWN",
+                confidence=conf,
+                plate_type=plate_type,
+                engine_used=engine_used,
+                cropped_plate_url=crop_url,
+                annotated_image_url=annotated_url,
+            ))
+
+        written_files.append(("final_results", annotated_filename))
+        storage.save_image("final_results", annotated_filename, annotated_img)
+        if results:
+            db.commit()
+    except Exception:
+        try:
+            db.rollback()
+        finally:
+            for category, filename in written_files:
+                try:
+                    storage.delete_file(category, filename)
+                except Exception as exc:
+                    logger.warning("Image result cleanup failed: {}", type(exc).__name__)
+        raise
 
     total_time_ms = round((time.perf_counter() - start_time) * 1000, 2)
 

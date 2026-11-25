@@ -41,7 +41,7 @@ def workspace(tmp_path, monkeypatch):
     })
     detector = SimpleNamespace(detect=lambda *a, **kw: [{"bbox": [20, 20, 120, 60], "confidence": .95}],
                                crop_plate=lambda image, bbox, **kw: image[20:60, 20:120])
-    ocr = SimpleNamespace(yolo_ocr=None, ninerouter_client=None,
+    ocr = SimpleNamespace(engine_type="yolo", yolo_ocr=None,
                          recognize_local_yolo=lambda image: {"raw_text": "30A12345", "avg_conf": .95, "plate_type": "one_line"})
     monkeypatch.setattr(image_recognition, "get_detector", lambda: detector)
     monkeypatch.setattr(image_recognition, "get_ocr_engine", lambda: ocr)
@@ -144,7 +144,7 @@ def test_failed_video_and_queue_capacity(workspace, monkeypatch):
         raise ValueError("Video không hợp lệ")
     monkeypatch.setattr(video_jobs, "process_video", fail)
     # Synchronous execution isolates job error handling from scheduling timing.
-    with patch.object(video_jobs._executor, "submit", side_effect=lambda fn, *args: fn(*args)):
+    with patch.object(video_jobs.get_task_queue(), "enqueue_video_job", side_effect=lambda task: task.run_local()):
         response = client.post("/api/video-tracking/jobs", files={"file": ("bad.mp4", b"bad")})
     job_id = response.json()["id"]
     job = client.get(f"/api/video-tracking/jobs/{job_id}").json()
@@ -153,7 +153,7 @@ def test_failed_video_and_queue_capacity(workspace, monkeypatch):
     assert client.post("/api/video-tracking/jobs", files={"file": ("big.mp4", b"12345")}).status_code == 413
     with video_jobs.SessionLocal() as db:
         assert db.query(VideoJob).filter_by(status="queued").count() == 0
-    with patch.object(video_jobs._executor, "submit"):
+    with patch.object(video_jobs.get_task_queue(), "enqueue_video_job"):
         for _ in range(2):
             assert client.post("/api/video-tracking/jobs", files={"file": ("clip.mp4", b"123")}).status_code == 202
         assert client.post("/api/video-tracking/jobs", files={"file": ("clip.mp4", b"123")}).status_code == 429

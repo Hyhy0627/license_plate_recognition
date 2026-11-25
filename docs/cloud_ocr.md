@@ -1,8 +1,10 @@
 # OCR qua NineRouter
 
-`src/core/integrations/ninerouter_vision.py` là HTTP client gọi dịch vụ Vision qua gateway tương thích `/chat/completions`. Backend không chạy mô hình ngôn ngữ/thị giác đó trong tiến trình Python. Dù gateway đặt ở localhost, gateway vẫn có thể chuyển request đến nhà cung cấp bên ngoài.
+`src/infrastructure/ninerouter_vision.py` là adapter HTTP gọi dịch vụ Vision qua gateway tương thích `/chat/completions`. Backend không chạy mô hình ngôn ngữ/thị giác đó trong tiến trình Python. Dù gateway đặt ở localhost, gateway vẫn có thể chuyển request đến nhà cung cấp bên ngoài.
 
-Luồng ảnh được điều phối tại `src/services/image_recognition.py`; job video thuộc `src/services/video_jobs.py` và thuật toán video trong `src/core/video/tracker.py`. Việc tách module không thay các điều kiện gọi gateway.
+Service ảnh lấy client qua `src/services/cloud_vision.py`. Service video truyền client và thời hạn gọi vào tracker qua giao diện `ICloudVisionClient` trong `src/core/integrations/base.py`. Adapter hạ tầng quản lý HTTP và phiên kết nối.
+
+Khi triển khai kiến trúc phân tán, worker riêng sẽ gọi adapter. NineRouter nằm ngoài ranh giới ALPR. Cấu hình chọn provider và khóa gateway thuộc phía máy chủ, còn ảnh/crop được chọn theo điều kiện dự phòng của từng luồng. [Kiến trúc triển khai](../README.md#kien-truc-trien-khai)
 
 ## Khi nào gọi
 
@@ -10,10 +12,10 @@ Luồng ảnh được điều phối tại `src/services/image_recognition.py`;
 |---|---|
 | API nhận diện ảnh | Thử các nhánh local trước; chỉ gọi nhận diện từ xa khi chưa có biển hợp lệ, client được khởi tạo và gateway được kiểm tra là sẵn sàng. Tối đa một lời gọi nhận diện crop hoặc toàn ảnh trong handler |
 | API video `mode=fast` | Không bật OCR từ xa, kể cả khi `VIDEO_ENGINE=legacy` |
-| API video `mode=detailed` hoặc `combined` | Lượt detailed có thể gọi remote cho track chưa đọc được, nếu engine có client. Tracker chọn tối đa `MAX_NINEROUTER_CALLS=6` ứng viên và có thể dừng sớm khi lỗi |
-| Gọi trực tiếp `PlateOCREngine.recognize_plate()` | Mode `9router` thử remote trước; `hybrid` có thể dùng remote sau local yếu. Method này có thứ tự riêng, không phải luồng mặc định của handler ảnh |
+| API video `mode=detailed` hoặc `combined` | Lượt detailed có thể gọi remote cho track chưa đọc được khi service cung cấp client. Tracker chọn tối đa `MAX_NINEROUTER_CALLS=6` ứng viên và có thể dừng sớm khi lỗi |
+| Gọi trực tiếp `PlateOCREngine.recognize_plate()` | Truyền `cloud_vision=` khi tạo engine nếu muốn OCR từ xa. Có client, mode `9router` thử remote trước và `hybrid` có thể gọi remote sau lượt đọc local yếu |
 
-Chỉ engine ảnh ở mode `hybrid`/`9router` khởi tạo client NineRouter. `VideoPlateOCR` của bộ ONNX không có client remote. `is_available()` thực hiện request kiểm tra riêng, được cache theo code; nó không phải lời gọi nhận diện ảnh.
+Factory tạo client theo yêu cầu khi engine ảnh ở mode `hybrid` hoặc `9router`. `is_available()` thực hiện request kiểm tra riêng có cache, tách khỏi ngân sách gọi nhận diện.
 
 ## Dữ liệu gửi đi
 

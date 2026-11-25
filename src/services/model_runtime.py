@@ -1,18 +1,17 @@
 """Shared image/video model factories and one inference lock per process."""
 
 from functools import lru_cache
-from pathlib import Path
 from threading import Lock
 
-from src.config import BASE_DIR, settings
-from src.core.image.detector import LicensePlateDetector
-from src.core.ocr.engine import PlateOCREngine
-from src.core.video.models import VideoPlateDetector, VideoPlateOCR
+from src.config import settings
+from src.core.models.runtime import create_model_runtime
 
 
 _detector = None
 _ocr_engine = None
 _inference_lock = Lock()
+_load_lock = Lock()
+_runtime = create_model_runtime(settings.MODEL_RUNTIME)
 
 
 def image_models_loaded() -> bool:
@@ -25,21 +24,23 @@ def ocr_model_loaded(ocr) -> bool:
             or getattr(getattr(ocr, "sequence_ocr", None), "recognizer", None) is not None)
 
 
-def get_detector() -> LicensePlateDetector:
+def get_detector():
     global _detector
     if _detector is None:
-        _detector = LicensePlateDetector(model_path=settings.YOLO_MODEL_PATH)
+        with _load_lock:
+            if _detector is None:
+                _detector = _runtime.image_detector()
     return _detector
 
-def get_ocr_engine() -> PlateOCREngine:
+
+def get_ocr_engine():
     global _ocr_engine
     if _ocr_engine is None:
-        _ocr_engine = PlateOCREngine(engine_type=settings.OCR_ENGINE)
+        with _load_lock:
+            if _ocr_engine is None:
+                _ocr_engine = _runtime.image_ocr()
     return _ocr_engine
 
-def _model_path(value):
-    path = Path(value)
-    return path if path.is_absolute() else BASE_DIR / path
 
 @lru_cache(maxsize=1)
 def get_video_engines():
@@ -47,13 +48,4 @@ def get_video_engines():
         return get_detector(), get_ocr_engine()
     if settings.VIDEO_ENGINE != "onnx":
         raise ValueError("VIDEO_ENGINE phải là onnx hoặc legacy.")
-    paths = [_model_path(value) for value in (
-        settings.VIDEO_PLATE_MODEL_PATH, settings.VIDEO_OCR_MODEL_PATH, settings.VIDEO_OCR_CONFIG_PATH,
-    )]
-    missing = [str(path) for path in paths if not path.is_file()]
-    if missing:
-        raise ValueError("Thiếu model video. Chạy python scripts/setup_video_models.py. Tệp thiếu: " + ", ".join(missing))
-    detector = VideoPlateDetector(str(paths[0]), conf_threshold=0.25)
-    if detector.model is None:
-        raise ValueError("Không nạp được model phát hiện biển số video.")
-    return detector, VideoPlateOCR(paths[1], paths[2])
+    return _runtime.video_engines()

@@ -8,9 +8,9 @@ import re
 
 import cv2
 
+from src.core.integrations.base import ICloudVisionClient
 from src.core.ocr.postprocessor import PlatePostprocessor
 from src.core.video.unassigned_plates import UnassignedPlates
-from src.config import settings
 
 
 VEHICLE_CLASSES = {2: "Ô tô", 3: "Xe máy", 5: "Xe buýt", 7: "Xe tải"}
@@ -190,12 +190,13 @@ def merge_video_results(fast, detailed):
             "ninerouter": detailed.get("ninerouter")}
 
 
-def associate_plates(vehicle_boxes, plate_boxes):
-    """Attach each plate to the best-matching vehicle based on containment and center alignment."""
+def associate_plates(vehicle_boxes, plate_boxes, previous_relative=None):
+    """Attach plates using geometry and their prior position within a track."""
     if not vehicle_boxes or not plate_boxes:
         return defaultdict(list)
 
     candidates = []
+    previous_relative = previous_relative or {}
     for p_idx, plate in enumerate(plate_boxes):
         px1, py1, px2, py2 = plate["bbox"]
         cx, cy = (px1 + px2) / 2, (py1 + py2) / 2
@@ -213,10 +214,22 @@ def associate_plates(vehicle_boxes, plate_boxes):
             if not strictly_inside and not margin_inside:
                 continue
 
+            plate_area = max(0, px2 - px1) * max(0, py2 - py1)
+            area = vw * vh
+            if plate_area > area * 0.55:
+                continue
+            # Một biển xe máy ở cao hơn phần thân trên thường là biển của
+            # phương tiện khác trong khung hình đông xe.
+            if v.get("vehicle_type") == "Xe máy" and cy < vy1 + vh * 0.35:
+                continue
+
             inside_penalty = 0.0 if strictly_inside else 1.0
             horiz_offset = abs(cx - vcx) / vw
-            area = vw * vh
-            score = inside_penalty * 2.0 + horiz_offset * 1.5 + (area / 1e7)
+            lower_offset = max(0.0, (vy1 + vh * 0.55 - cy) / vh)
+            relative = ((cx - vx1) / vw, (cy - vy1) / vh)
+            prior = previous_relative.get(v["track_id"])
+            motion_penalty = (abs(relative[0] - prior[0]) + abs(relative[1] - prior[1])) if prior else 0.0
+            score = inside_penalty * 2.0 + horiz_offset * 1.5 + lower_offset + motion_penalty + (area / 1e7)
             candidates.append((score, p_idx, v["track_id"], plate))
 
     candidates.sort(key=lambda item: item[0])
@@ -314,7 +327,9 @@ def _rescue_visible_plates(capture, frames, tracks, observations, plate_detector
                     _remember_plate_crop(remote_plate_crops, track_id, crop, plate, plate_detector)
                     read = ocr_engine.recognize_local_yolo(plate_crop)
                     cleaned = PlatePostprocessor.clean_text(read.get("raw_text", ""))
-                    formatted = PlatePostprocessor.format_vietnamese_plate(cleaned, plate_type=read.get("plate_type"), text_lines=read.get("text_lines"))
+                    formatted = PlatePostprocessor.format_vietnamese_plate(
+                        cleaned, plate_type=read.get("plate_type"),
+                        text_lines=read.get("text_lines"), confidence=read.get("avg_conf"))
                     if PlatePostprocessor.validate_plate(formatted) and plate_fits_vehicle(formatted, tracks[track_id]["vehicle_type"]):
                         observations[track_id].append({"plate_number": formatted, "confidence": float(read.get("avg_conf", 0.0))})
                         break
@@ -323,10 +338,10 @@ def _rescue_visible_plates(capture, frames, tracks, observations, plate_detector
                 break
 
 
-def _rescue_plates_with_ninerouter(capture, frames, tracks, observations, plate_detector, ocr_engine,
-                                   inference_lock, fps, scale, progress, remote_plate_crops=None):
+def _rescue_plates_with_ninerouter(capture, frames, tracks, observations, plate_detector,
+                                   client: ICloudVisionClient | None, inference_lock, fps, scale,
+                                   progress, remote_plate_crops=None, *, timeout: float | None = None):
     """Use one bounded remote request per unreadable track, on a vehicle or plate crop."""
-    client = getattr(ocr_engine, "ninerouter_client", None)
     if client is None:
         return {"status": "disabled", "attempts": 0, "recognized": 0}
     if not client.is_available():
@@ -355,7 +370,7 @@ def _rescue_plates_with_ninerouter(capture, frames, tracks, observations, plate_
     status = "available"
     for index, track_id in enumerate(ranked):
         if track_id in remote_plate_crops:
-            read = client.recognize_plate(remote_plate_crops[track_id][1], timeout=settings.VIDEO_NINEROUTER_TIMEOUT)
+            read = client.recognize_plate(remote_plate_crops[track_id][1], timeout=timeout)
             plate_visible = True
         else:
             _, second, bbox = max(candidates[track_id], key=lambda item: item[0])
@@ -380,16 +395,17 @@ def _rescue_plates_with_ninerouter(capture, frames, tracks, observations, plate_
                 plate_crop = plate_detector.crop_plate(crop, plate_boxes[0]["bbox"])
                 if plate_crop is None or not plate_crop.size:
                     continue
-                read = client.recognize_plate(plate_crop, timeout=settings.VIDEO_NINEROUTER_TIMEOUT)
+                read = client.recognize_plate(plate_crop, timeout=timeout)
                 plate_visible = True
             else:
-                read = client.detect_and_recognize_plate(crop, timeout=settings.VIDEO_NINEROUTER_TIMEOUT)
+                read = client.detect_and_recognize_plate(crop, timeout=timeout)
                 plate_visible = bool(read.get("bbox"))
         attempts += 1
 
         cleaned = PlatePostprocessor.clean_text(read.get("raw_text", ""))
         formatted = PlatePostprocessor.format_vietnamese_plate(
-            cleaned, plate_type=read.get("plate_type"), text_lines=read.get("text_lines"))
+            cleaned, plate_type=read.get("plate_type"),
+            text_lines=read.get("text_lines"), confidence=read.get("avg_conf"))
         if plate_visible and PlatePostprocessor.validate_plate(formatted) and plate_fits_vehicle(formatted, tracks[track_id]["vehicle_type"]):
             observations[track_id].append({"plate_number": formatted, "confidence": float(read.get("confidence", 0.0))})
             recognized += 1
@@ -401,13 +417,16 @@ def _rescue_plates_with_ninerouter(capture, frames, tracks, observations, plate_
 
 
 def process_video(path: Path, vehicle_model_path: Path, plate_detector, ocr_engine, inference_lock: Lock,
-                  progress: Callable[[int], None], mode: str = "fast", use_remote_ocr: bool = True):
-    """Return sparse vehicle tracks and plate votes, with bounded 9Router rescue."""
+                  progress: Callable[[int], None], mode: str = "fast", use_remote_ocr: bool = True, *,
+                  cloud_vision: ICloudVisionClient | None = None, remote_ocr_timeout: float | None = None):
+    """Return sparse vehicle tracks and plate votes, with optional remote rescue."""
     if mode == "combined":
         fast = process_video(path, vehicle_model_path, plate_detector, ocr_engine, inference_lock,
                              lambda value: progress(round(value * 0.45)), mode="fast", use_remote_ocr=False)
         detailed = process_video(path, vehicle_model_path, plate_detector, ocr_engine, inference_lock,
-                                 lambda value: progress(45 + round(value * 0.55)), mode="detailed", use_remote_ocr=use_remote_ocr)
+                                 lambda value: progress(45 + round(value * 0.55)), mode="detailed",
+                                 use_remote_ocr=use_remote_ocr, cloud_vision=cloud_vision,
+                                 remote_ocr_timeout=remote_ocr_timeout)
         return merge_video_results(fast, detailed)
     from ultralytics import YOLO
 
@@ -438,6 +457,7 @@ def process_video(path: Path, vehicle_model_path: Path, plate_detector, ocr_engi
         output_width, output_height = round(width * scale), round(height * scale)
         frames = []
         tracks = {}
+        previous_plate_relative = {}
         unassigned_plates = UnassignedPlates()
         observations = defaultdict(list)
         remote_plate_crops = {}
@@ -497,7 +517,15 @@ def process_video(path: Path, vehicle_model_path: Path, plate_detector, ocr_engi
                 with inference_lock:
                     plate_boxes = plate_detector.detect(original_frame, include_low_confidence=True)
                     scaled_plates = [{**plate, "original_bbox": plate["bbox"], "bbox": [round(value * scale) for value in plate["bbox"]]} for plate in plate_boxes]
-                    assigned = associate_plates(vehicles, scaled_plates)
+                    assigned = associate_plates(vehicles, scaled_plates, previous_plate_relative)
+                    for vehicle in vehicles:
+                        for plate in assigned.get(vehicle["track_id"], []):
+                            vx1, vy1, vx2, vy2 = vehicle["bbox"]
+                            px1, py1, px2, py2 = plate["bbox"]
+                            previous_plate_relative[vehicle["track_id"]] = (
+                                ((px1 + px2) / 2 - vx1) / max(1, vx2 - vx1),
+                                ((py1 + py2) / 2 - vy1) / max(1, vy2 - vy1),
+                            )
                     attached = {tuple(plate["bbox"]) for group in assigned.values() for plate in group}
                     unmatched = [plate for plate in scaled_plates if tuple(plate["bbox"]) not in attached]
                     unassigned_plates.observe(second, original_frame, unmatched, plate_detector, ocr_engine)
@@ -540,7 +568,9 @@ def process_video(path: Path, vehicle_model_path: Path, plate_detector, ocr_engi
                                                  {**plate, "bbox": plate["original_bbox"]}, plate_detector)
                             read = ocr_engine.recognize_local_yolo(crop)
                             cleaned = PlatePostprocessor.clean_text(read.get("raw_text", ""))
-                            formatted = PlatePostprocessor.format_vietnamese_plate(cleaned, plate_type=read.get("plate_type"), text_lines=read.get("text_lines"))
+                            formatted = PlatePostprocessor.format_vietnamese_plate(
+                                cleaned, plate_type=read.get("plate_type"),
+                                text_lines=read.get("text_lines"), confidence=read.get("avg_conf"))
 
                             # Nếu ảnh bị nhòe chuyển động dẫn đến đọc lỗi, thử làm nét (unsharp mask) và đọc lại
                             if not (PlatePostprocessor.validate_plate(formatted) and plate_fits_vehicle(formatted, vehicle["vehicle_type"])):
@@ -550,7 +580,8 @@ def process_video(path: Path, vehicle_model_path: Path, plate_detector, ocr_engi
                                     retry_read = ocr_engine.recognize_local_yolo(sharpened)
                                     retry_cleaned = PlatePostprocessor.clean_text(retry_read.get("raw_text", ""))
                                     retry_formatted = PlatePostprocessor.format_vietnamese_plate(
-                                        retry_cleaned, plate_type=retry_read.get("plate_type"), text_lines=retry_read.get("text_lines"))
+                                        retry_cleaned, plate_type=retry_read.get("plate_type"),
+                                        text_lines=retry_read.get("text_lines"), confidence=retry_read.get("avg_conf"))
                                     if PlatePostprocessor.validate_plate(retry_formatted) and plate_fits_vehicle(retry_formatted, vehicle["vehicle_type"]):
                                         read, formatted = retry_read, retry_formatted
                                 except Exception:
@@ -578,8 +609,8 @@ def process_video(path: Path, vehicle_model_path: Path, plate_detector, ocr_engi
         ninerouter = {"status": "skipped", "attempts": 0, "recognized": 0}
         if use_remote_ocr:
             ninerouter = _rescue_plates_with_ninerouter(capture, frames, tracks, observations, plate_detector,
-                                                        ocr_engine, inference_lock, fps, scale, progress,
-                                                        remote_plate_crops)
+                                                        cloud_vision, inference_lock, fps, scale, progress,
+                                                        remote_plate_crops, timeout=remote_ocr_timeout)
         # Tách các track bị ID-switch khi lia máy quay (khi một track có nhiều biển số riêng biệt với >= 4 lần xuất hiện)
         next_track_id = max(tracks.keys(), default=0) + 1
         for track_id in list(tracks.keys()):

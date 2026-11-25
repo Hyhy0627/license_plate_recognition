@@ -20,7 +20,8 @@ class UnassignedPlates:
             if confidence < 0.70:
                 continue
             number = PlatePostprocessor.format_vietnamese_plate(
-                read.get("raw_text", ""), read.get("plate_type"), read.get("text_lines"))
+                read.get("raw_text", ""), read.get("plate_type"),
+                read.get("text_lines"), confidence)
             if PlatePostprocessor.validate_plate(number):
                 self.sightings[number].append((second, plate["bbox"], confidence))
                 self.last_seen = second

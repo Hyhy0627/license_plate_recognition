@@ -1,13 +1,12 @@
-"""Read-only evaluation of existing labeled images. See benchmark/ACCURACY.md.
+"""Evaluate labeled images or compare live API throughput across process layouts.
 
-Default scope: offline local detector + local YOLO OCR + postprocessor.
-No cloud calls, no API/database writes, no regenerated datasets or notebooks.
+The offline mode reads labeled fixtures without cloud calls or API/database writes.
+The HTTP throughput mode uses real local models and disposable databases.
 """
 from __future__ import annotations
 
 import argparse
 import csv
-import hashlib
 import json
 import math
 import platform
@@ -22,14 +21,7 @@ sys.path.insert(0, str(ROOT))
 from src.evaluation.metrics import (
     detection_metrics, normalize_text, text_metrics, timing_stats,
 )
-
-
-def sha256(path):
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+from src.core.models.registry import default_path, file_sha256 as sha256
 
 
 def load_annotations(dataset, ground_truth):
@@ -247,7 +239,7 @@ def main(argv=None):
     parser.add_argument("--dataset", type=Path, default=ROOT / "tests/fixtures/test_cases")
     parser.add_argument("--ground-truth", type=Path)
     parser.add_argument("--dataset-kind", choices=["synthetic", "real", "unspecified"], default="unspecified")
-    parser.add_argument("--model", type=Path, default=ROOT / "models/best.pt")
+    parser.add_argument("--model", type=Path, default=default_path("image-detector"))
     parser.add_argument("--output-root", type=Path, default=ROOT / "data/benchmarks")
     parser.add_argument("--confidence", type=float, default=0.30, help="Operating threshold for local pipeline and reported P/R")
     parser.add_argument("--ap-min-confidence", type=float, default=0.01, help="Collect low-score boxes for AP; AP is conditional on these proposals and detector filters")
@@ -255,7 +247,20 @@ def main(argv=None):
     parser.add_argument("--limit", type=int, help="Smoke test only; report includes selected sample count")
     parser.add_argument("--threads", type=int, default=2)
     parser.add_argument("--no-plots", action="store_true")
+    parser.add_argument("--api-throughput", action="store_true", help="Compare live API throughput across process layouts")
+    parser.add_argument("--api-image", type=Path, default=ROOT / "tests/fixtures/test_cases/blurred/blur_01.jpg")
+    parser.add_argument("--duration", type=float, default=10, help="Measured seconds in each API trial")
+    parser.add_argument("--metadata-clients", type=int, default=4)
+    parser.add_argument("--inference-clients", type=int, default=2)
+    parser.add_argument("--repeats", type=int, default=3)
     args = parser.parse_args(argv)
+    if args.api_throughput:
+        if not math.isfinite(args.duration) or min(args.duration, args.metadata_clients, args.inference_clients,
+                                                    args.repeats, args.threads) <= 0:
+            parser.error("API duration, client counts, repeats and threads must be positive")
+        from scripts.benchmark_api import compare_api_throughput
+
+        return compare_api_throughput(args)
     if not (0 < args.ap_min_confidence <= args.confidence <= 1) or args.warmup < 0 or args.threads < 1 or (args.limit is not None and args.limit < 1):
         parser.error("Require 0 < AP minimum <= operating confidence <= 1, warmup >= 0, threads >= 1, limit >= 1")
     dataset = args.dataset.resolve()

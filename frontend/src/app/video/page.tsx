@@ -41,6 +41,9 @@ export default function VideoPage() {
 
 function VideoWorkspace() {
   const [file, setFile] = useState<File | null>(null);
+  const [mode, setMode] = useState<"fast" | "detailed" | "combined">("fast");
+  const [showAllTracks, setShowAllTracks] = useState(false);
+  const [pastJobs, setPastJobs] = useState<Array<{ id: string; filename: string; mode: string; status: string }>>([]);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [videoDimensions, setVideoDimensions] = useState<{ width: number; height: number } | null>(null);
   const [job, setJob] = useState<VideoJob | null>(null);
@@ -53,13 +56,18 @@ function VideoWorkspace() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const pendingSeek = useRef<number | null>(null);
   const jobResult = job?.result;
-  const result = useMemo(() => jobResult && tracksWithPlates(jobResult), [jobResult]);
+  const result = useMemo(() => jobResult && (showAllTracks ? jobResult : tracksWithPlates(jobResult)), [jobResult, showAllTracks]);
   const dimensions = result ? { width: result.frame_width, height: result.frame_height } : videoDimensions;
   const playerStyle = dimensions ? { aspectRatio: `${dimensions.width} / ${dimensions.height}`, maxWidth: `${70 * dimensions.width / dimensions.height}vh` } : undefined;
   const sourceUrl = job?.id ? `${API_BASE_URL}/api/video-tracking/jobs/${job.id}/media` : videoUrl;
   const frame = result ? nearestFrame(result, currentTime) : null;
 
   useEffect(() => () => { if (videoUrl) URL.revokeObjectURL(videoUrl); }, [videoUrl]);
+  useEffect(() => {
+    void apiFetch("/api/video-tracking/jobs?page_size=20").then(async response => {
+      if (response.ok) setPastJobs((await response.json()).items ?? []);
+    }).catch(() => {});
+  }, [job?.status]);
   useEffect(() => {
     if (!job?.id || !["queued", "running"].includes(job.status)) return;
     let cancelled = false;
@@ -97,7 +105,7 @@ function VideoWorkspace() {
     setUploading(true); setError(""); setJob(null);
     try {
       const form = new FormData(); form.append("file", videoFile);
-      const response = await apiFetch("/api/video-tracking/jobs?mode=fast", { method: "POST", body: form });
+      const response = await apiFetch(`/api/video-tracking/jobs?mode=${mode}`, { method: "POST", body: form });
       if (!response.ok) throw new Error(await apiError(response, "Không tải được video lên máy chủ."));
       setJob(await response.json());
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Không kết nối được máy chủ."); }
@@ -144,7 +152,10 @@ function VideoWorkspace() {
             {result && <VideoAnnotations videoRef={videoRef} result={result} frame={frame} selectedTrack={selectedTrack} />}
           </div> : <div className="video-empty"><div className="video-empty-icon"><Play size={34} aria-hidden="true" /></div><strong>Chưa chọn video</strong><p>Chọn video để tự động bắt đầu phân tích.</p></div>}
         </div>
-        <p className="video-combined-note"><strong>Phân tích nhanh</strong> Theo vết ở 5 khung hình/giây, nhận diện cục bộ trong một lượt xử lý. Rê chuột lên xe hoặc chọn trong danh sách để xem biển số.</p>
+        <label className="video-combined-note" htmlFor="video-mode">Chế độ xử lý</label>
+        <select id="video-mode" value={mode} onChange={event => setMode(event.target.value as typeof mode)} disabled={uploading || job?.status === "running" || job?.status === "queued"} className="mb-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+          <option value="fast">Nhanh · OCR cục bộ</option><option value="detailed">Chi tiết</option><option value="combined">Kết hợp</option>
+        </select>
         <div className="video-actions">
           <input ref={inputRef} type="file" accept=".mp4,.mov,.avi,.webm,video/*" className="sr-only" onChange={chooseFile} aria-label="Chọn video giao thông" />
           <button type="button" className="video-select" onClick={() => inputRef.current?.click()} disabled={uploading || job?.status === "running" || job?.status === "queued"}><Upload size={17} aria-hidden="true" /> {file ? "Đổi video" : "Chọn video"}</button>
@@ -159,9 +170,10 @@ function VideoWorkspace() {
 
       <aside className="video-card video-results" aria-labelledby="video-results-title">
         <div className="video-card-head"><div><ScanLine size={18} aria-hidden="true" /><h2 id="video-results-title">Kết quả nhận diện biển số</h2></div></div>
+        <label className="video-result-note"><input type="checkbox" checked={showAllTracks} onChange={event => setShowAllTracks(event.target.checked)} /> Hiện cả xe chưa đọc được biển</label>
         {result ? <>
           {result.processing_seconds !== undefined && <p className="video-result-note">Hoàn tất phân tích trong {result.processing_seconds.toFixed(1)} giây.</p>}
-          <div className="video-stats"><div><strong>{result.tracks.length}</strong><span>ID có biển số</span></div><div><strong>{formatTime(result.duration)}</strong><span>Thời lượng</span></div></div>
+          <div className="video-stats"><div><strong>{result.tracks.length}</strong><span>{showAllTracks ? "ID theo vết" : "ID có biển số"}</span></div><div><strong>{formatTime(result.duration)}</strong><span>Thời lượng</span></div></div>
           {result.tracks.length ? <div className="video-track-list">{result.tracks.map(trackButton)}</div>
             : <p className="video-results-empty">Chưa đọc được biển số nào trong video này. Hãy thử video có biển số rõ hơn.</p>}
           {result.ninerouter?.status === "available" && <p className="video-result-note">9Router đã kiểm tra {result.ninerouter.attempts} ID chưa đọc được và đọc thêm {result.ninerouter.recognized} biển.</p>}
@@ -170,6 +182,7 @@ function VideoWorkspace() {
           {result.ninerouter?.status === "error" && <p className="video-result-note">9Router đã thử {result.ninerouter.attempts} ID nhưng gặp lỗi kết nối hoặc hết thời gian chờ.</p>}
           <p className="video-result-note">Một xe có thể mang nhiều ID khi camera di chuyển. Biển đọc được cần đối chiếu với hình ảnh gốc trước khi sử dụng.</p>
         </> : <div className="video-results-empty"><ScanLine size={36} aria-hidden="true" /><strong>Kết quả sẽ xuất hiện ở đây</strong><p>Sau khi phân tích, chọn một xe trong danh sách để chuyển đến thời điểm xe xuất hiện.</p></div>}
+        {pastJobs.length > 0 && <section aria-label="Lịch sử video" className="video-result-note"><strong>Video đã xử lý</strong><div className="mt-2 flex flex-wrap gap-2">{pastJobs.map(past => <button key={past.id} type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-left text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500" onClick={async () => { const response = await apiFetch(`/api/video-tracking/jobs/${past.id}`); if (response.ok) setJob(await response.json()); }} >{past.filename} · {past.status}</button>)}</div></section>}
       </aside>
     </div>
   </div>;

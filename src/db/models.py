@@ -19,7 +19,7 @@ class PlateHistory(Base):
     engine_used = Column(String(50), nullable=True, default="local_yolo") # local_yolo hoặc 9router_vision
     cropped_plate_url = Column(String(255), nullable=True)
     annotated_image_url = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.now, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None), index=True)
 
     @validates("plate_number")
     def normalize_number(self, key, value):
@@ -72,6 +72,8 @@ class VideoJob(Base):
     owner_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
     filename = Column(String(255), nullable=False)
     mode = Column(String(30), default="fast", nullable=False)
+    queue_backend = Column(String(16), nullable=True)
+    worker_token = Column(String(32), nullable=True)
     status = Column(String(30), index=True, default="queued", nullable=False)
     progress = Column(Integer, default=0, nullable=False)
     error = Column(String(500))

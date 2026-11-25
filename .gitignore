@@ -82,3 +82,8 @@ test_system.py
 .ruff_cache/
 /project_structure.json
 /.codex-worktrees/
+
+# Local documents and guides
+form.md
+HUONG_DAN_SUA_DO_AN_CHATGPT.md
+word.md

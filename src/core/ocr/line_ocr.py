@@ -60,7 +60,8 @@ class LocalLineOCR:
             return empty
         text = ''.join(lines)
         plate_type = 'two_line' if two_line else 'one_line'
-        formatted = PlatePostprocessor.format_vietnamese_plate(text, plate_type, lines)
+        formatted = PlatePostprocessor.format_vietnamese_plate(
+            text, plate_type, lines, min(scores) if scores else None)
         if not scores or min(scores) < 0.50 or sum(scores) / len(scores) < 0.70 or not PlatePostprocessor.validate_plate(formatted):
             return empty
         return {'raw_text': text, 'text_lines': lines, 'plate_type': plate_type,

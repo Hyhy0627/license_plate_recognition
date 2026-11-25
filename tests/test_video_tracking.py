@@ -206,8 +206,9 @@ def test_ninerouter_reads_one_detected_plate_crop_for_unreadable_track():
         def is_available(self):
             return True
 
-        def recognize_plate(self, crop, **_kwargs):
+        def recognize_plate(self, crop, *, timeout=None):
             assert crop.size
+            assert timeout == 7.5
             self.calls += 1
             return {"raw_text": "30A12345", "plate_type": "one_line", "confidence": 0.88}
 
@@ -220,7 +221,7 @@ def test_ninerouter_reads_one_detected_plate_crop_for_unreadable_track():
               for second in (0.0, 1.0)]
     observations = {4: []}
     result = _rescue_plates_with_ninerouter(Capture(), frames, tracks, observations, Detector(),
-                                            SimpleNamespace(ninerouter_client=client), Lock(), 10, 1.0, lambda _: None)
+                                            client, Lock(), 10, 1.0, lambda _: None, timeout=7.5)
 
     assert client.calls == 1
     assert result == {"status": "available", "attempts": 1, "recognized": 1}
@@ -248,7 +249,7 @@ def test_ninerouter_prefers_plate_seen_in_an_earlier_frame():
     tracks = {4: {"vehicle_type": "Ô tô", "first_seen": 0.0, "last_seen": 0.0}}
     observations = defaultdict(list)
     result = _rescue_plates_with_ninerouter(Capture(), frames, tracks, observations, Detector(),
-                                            SimpleNamespace(ninerouter_client=Client()), Lock(), 10, 1.0,
+                                            Client(), Lock(), 10, 1.0,
                                             lambda _: None, {4: (0.8, np.ones((30, 80, 3), dtype=np.uint8))})
     assert result == {"status": "available", "attempts": 1, "recognized": 1}
 
@@ -280,10 +281,10 @@ def test_ninerouter_vehicle_crop_requires_a_located_plate():
               for second in (0.0, 1.0)]
     tracks = {4: {"vehicle_type": "Ô tô", "first_seen": 0.0, "last_seen": 1.0}}
     _rescue_plates_with_ninerouter(Capture(), frames, tracks, observations, Detector(),
-                                   SimpleNamespace(ninerouter_client=Client(None)), Lock(), 10, 1.0, lambda _: None)
+                                   Client(None), Lock(), 10, 1.0, lambda _: None)
     assert observations[4] == []
     _rescue_plates_with_ninerouter(Capture(), frames, tracks, observations, Detector(),
-                                   SimpleNamespace(ninerouter_client=Client([40, 60, 120, 90])), Lock(), 10, 1.0, lambda _: None)
+                                   Client([40, 60, 120, 90]), Lock(), 10, 1.0, lambda _: None)
     assert observations[4] == [{"plate_number": "30A-123.45", "confidence": 0.9}]
 
 
@@ -320,7 +321,7 @@ def test_ninerouter_calls_are_bounded_and_offline_gateway_is_skipped():
     statuses = []
     for client in (offline, online):
         statuses.append(_rescue_plates_with_ninerouter(Capture(), frames, tracks, defaultdict(list), Detector(),
-                                                       SimpleNamespace(ninerouter_client=client), Lock(), 10, 1.0, lambda _: None))
+                                                       client, Lock(), 10, 1.0, lambda _: None))
     assert offline.calls == 0
     assert online.calls == 6
     assert statuses == [{"status": "unavailable", "attempts": 0, "recognized": 0},

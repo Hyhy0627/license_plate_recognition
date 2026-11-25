@@ -1,6 +1,6 @@
 # Đồng bộ tài liệu — giai đoạn 1
 
-Ngày thực hiện: **19/11/2026**, Asia/Bangkok. Phạm vi là bộ hướng dẫn Markdown/text của working tree hiện tại; không thay code AI, endpoint, schema, file môi trường, trọng số hoặc dữ liệu runtime. [AUDIT.md](../../AUDIT.md) là snapshot trước sửa và được giữ nguyên.
+Ngày thực hiện: **19/11/2026**, Asia/Bangkok. Phạm vi là bộ hướng dẫn Markdown/text của working tree hiện tại; không thay code AI, endpoint, schema, file môi trường, trọng số hoặc dữ liệu runtime. Bản `AUDIT.md` ghi nhận trạng thái trước sửa và có trong lịch sử Git.
 
 ## Thay đổi
 
@@ -18,7 +18,7 @@ Ngày thực hiện: **19/11/2026**, Asia/Bangkok. Phạm vi là bộ hướng d
 | File | Trách nhiệm |
 |---|---|
 | [README.md](../../README.md) | Cài đặt, khởi động và mục lục |
-| [PROJECT_STRUCTURE.md](../../PROJECT_STRUCTURE.md) | Kiến trúc, module, OpenAPI và ORM |
+| `PROJECT_STRUCTURE.md` tại thời điểm rà soát | Kiến trúc, module, OpenAPI và ORM. Các mục này hiện nằm trong [README gốc](../../README.md) |
 | [frontend/README.md](../../frontend/README.md) | API URL, cookie và kiểm tra frontend |
 | [tests/TESTING.md](../../tests/TESTING.md) | Lệnh/phạm vi kiểm thử |
 | [benchmark/README.md](../../benchmark/README.md) | Runner chức năng và ranh giới phép đo |
