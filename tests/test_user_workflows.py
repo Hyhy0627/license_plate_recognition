@@ -24,6 +24,10 @@ def workspace(tmp_path, monkeypatch):
     initialize_database(engine)
     sessions = sessionmaker(bind=engine)
     monkeypatch.setattr(authentication, "rate_limiter", authentication.LoginRateLimiter())
+    from src.services.inference_rate_limit import InferenceRateLimiter
+    limiter = InferenceRateLimiter()
+    monkeypatch.setattr("src.api.video_routes.inference_rate_limiter", limiter)
+    monkeypatch.setattr("src.api.routes.inference_rate_limiter", limiter)
     def database():
         with sessions() as db:
             yield db
@@ -153,7 +157,8 @@ def test_failed_video_and_queue_capacity(workspace, monkeypatch):
     assert client.post("/api/video-tracking/jobs", files={"file": ("big.mp4", b"12345")}).status_code == 413
     with video_jobs.SessionLocal() as db:
         assert db.query(VideoJob).filter_by(status="queued").count() == 0
-    with patch.object(video_jobs.get_task_queue(), "enqueue_video_job"):
+    with patch.object(video_jobs.get_task_queue(), "enqueue_video_job"), \
+         patch("src.api.video_routes.inference_rate_limiter.check"):
         for _ in range(2):
             assert client.post("/api/video-tracking/jobs", files={"file": ("clip.mp4", b"123")}).status_code == 202
         assert client.post("/api/video-tracking/jobs", files={"file": ("clip.mp4", b"123")}).status_code == 429
